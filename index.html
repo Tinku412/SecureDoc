@@ -136,21 +136,30 @@
   <script src="js/common.js"></script>
   <script>
     async function start() {
-      const { data } = await sb.auth.getSession();
-      if (data.session) {
-        window.location.href = "app.html";
-      } else {
+      try {
         await signInWithGoogle("app.html");
+      } catch (err) {
+        alert("Sign-in failed: " + (err.message || err));
       }
     }
     $("#signin-btn").addEventListener("click", start);
     $("#hero-cta").addEventListener("click", start);
     $("#band-cta").addEventListener("click", start);
 
-    // If already signed in, make the nav button a shortcut to the app.
-    sb.auth.getSession().then(({ data }) => {
-      if (data.session) {
-        $("#signin-btn").innerHTML = "Open dashboard";
+    // Surface any OAuth error that bounced back to this page.
+    const authError = consumeAuthErrorFromUrl();
+    if (authError) {
+      alert(
+        "Google sign-in failed.\n\n" + authError +
+        "\n\nThis usually means the Google Client ID or Client Secret in " +
+        "Supabase (Authentication → Providers → Google) is incorrect."
+      );
+    }
+
+    // If already signed in (returning visit), skip straight to the app.
+    waitForSession().then((session) => {
+      if (session) {
+        window.location.href = "app.html";
       }
     });
   </script>

@@ -208,8 +208,8 @@ input:focus { border-color: var(--accent); }
 
 .otp-input {
   font-family: var(--font-mono) !important;
-  font-size: 1.6rem !important;
-  letter-spacing: 0.5em;
+  font-size: 1.5rem !important;
+  letter-spacing: 0.35em;
   text-align: center;
 }
 

@@ -47,7 +47,7 @@
       <form id="otp-form">
         <div class="field">
           <label for="otp-input">Verification code</label>
-          <input type="text" id="otp-input" class="otp-input" required inputmode="numeric" autocomplete="one-time-code" maxlength="6" placeholder="000000" />
+          <input type="text" id="otp-input" class="otp-input" required inputmode="numeric" autocomplete="one-time-code" maxlength="8" minlength="8" pattern="[0-9]{8}" placeholder="00000000" />
         </div>
         <button class="btn btn-primary btn-block" type="submit" id="otp-submit">Verify and open</button>
       </form>
@@ -135,7 +135,11 @@
           options: { shouldCreateUser: true },
         });
         if (error) {
-          setAlert($("#email-alert"), `Could not send code: ${error.message}`, "error");
+          setAlert(
+            $("#email-alert"),
+            `Could not send code: ${formatAuthError(error, "Failed to send OTP.")}`,
+            "error"
+          );
           return;
         }
 
@@ -143,8 +147,12 @@
         hide($("#gate-email"));
         show($("#gate-otp"));
         $("#otp-input").focus();
-      } catch {
-        setAlert($("#email-alert"), "Something went wrong. Please try again.", "error");
+      } catch (err) {
+        setAlert(
+          $("#email-alert"),
+          `Something went wrong. ${formatAuthError(err, "Please try again.")}`,
+          "error"
+        );
       } finally {
         btn.disabled = false;
       }
@@ -165,7 +173,13 @@
       btn.disabled = true;
       clearAlert($("#otp-alert"));
 
-      const code = $("#otp-input").value.trim();
+      const code = $("#otp-input").value.trim().replace(/\s/g, "");
+      if (!/^\d{8}$/.test(code)) {
+        setAlert($("#otp-alert"), "Enter the full 8-digit code from your email.", "error");
+        btn.disabled = false;
+        return;
+      }
+
       const { data, error } = await sb.auth.verifyOtp({
         email: viewerEmail,
         token: code,
@@ -173,7 +187,13 @@
       });
 
       if (error || !data.session) {
-        setAlert($("#otp-alert"), "That code is incorrect or has expired. Please check and try again.", "error");
+        setAlert(
+          $("#otp-alert"),
+          error
+            ? formatAuthError(error, "Could not verify code.")
+            : "That code is incorrect or has expired. Please check and try again.",
+          "error"
+        );
         btn.disabled = false;
         return;
       }

@@ -95,8 +95,12 @@ Edit `js/config.js` with your project values from
 const SECUREDOC_CONFIG = {
   SUPABASE_URL: "https://<your-ref>.supabase.co",
   SUPABASE_ANON_KEY: "<your-anon-public-key>",
+  SITE_URL: "https://securedoc.thestarcatalog.workers.dev",
 };
 ```
+
+`SITE_URL` must be the full URL with `https://` and must match Supabase Auth
+URL Configuration.
 
 ### 6. Deploy to Cloudflare Pages
 
@@ -104,9 +108,16 @@ const SECUREDOC_CONFIG = {
 2. In the [Cloudflare dashboard](https://dash.cloudflare.com), create a
    Pages project from that repository. Framework preset: **None**,
    build command: empty, output directory: `/`.
-3. After the first deploy, add your Pages URL to Supabase under
-   **Authentication → URL Configuration** (Site URL and redirect URLs),
-   otherwise Google sign-in will bounce back to localhost.
+3. After the first deploy, open **Supabase → Authentication → URL Configuration**
+   and set:
+   - **Site URL:** `https://securedoc.thestarcatalog.workers.dev` (must include `https://`)
+   - **Redirect URLs:** add each of these:
+     - `https://securedoc.thestarcatalog.workers.dev/app.html`
+     - `https://securedoc.thestarcatalog.workers.dev/dashboard.html`
+     - `https://securedoc.thestarcatalog.workers.dev/index.html`
+
+   If the Site URL is missing `https://`, Supabase will redirect to a broken
+   address like `https://<project>.supabase.co/your-domain.workers.dev`.
 
 For local development, any static server works:
 

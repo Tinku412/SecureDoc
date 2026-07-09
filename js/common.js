@@ -1,8 +1,17 @@
 /* Shared helpers used by app, dashboard and viewer pages. */
 
+// Use implicit flow so tokens arrive in the URL hash — no server-side code
+// exchange step, no race between the auto-exchange and getSession().
 const sb = supabase.createClient(
   SECUREDOC_CONFIG.SUPABASE_URL,
-  SECUREDOC_CONFIG.SUPABASE_ANON_KEY
+  SECUREDOC_CONFIG.SUPABASE_ANON_KEY,
+  {
+    auth: {
+      flowType: "implicit",
+      detectSessionInUrl: true,
+      persistSession: true,
+    },
+  }
 );
 
 const FUNCTIONS_URL = `${SECUREDOC_CONFIG.SUPABASE_URL}/functions/v1`;
@@ -27,6 +36,25 @@ function setAlert(el, message, kind) {
 function clearAlert(el) {
   el.textContent = "";
   el.className = "alert hidden";
+}
+
+function formatAuthError(error, fallback = "Unexpected authentication error.") {
+  if (!error) return fallback;
+  if (typeof error === "string") return error;
+  if (error.message && typeof error.message === "string" && error.message.trim()) {
+    return error.message;
+  }
+  if (error.error_description && typeof error.error_description === "string") {
+    return error.error_description;
+  }
+  if (error.error && typeof error.error === "string") {
+    return error.error;
+  }
+  try {
+    return JSON.stringify(error);
+  } catch {
+    return fallback;
+  }
 }
 
 function escapeHtml(str) {
@@ -61,24 +89,86 @@ function formatBytes(bytes) {
   return `${(bytes / Math.pow(1024, i)).toFixed(i === 0 ? 0 : 1)} ${units[i]}`;
 }
 
-/* Requires a signed-in owner; redirects to the landing page otherwise.
-   Returns the session. */
+/* Absolute redirect URL. On localhost, always use the local origin so
+   development works; otherwise use SITE_URL (or fall back to the origin). */
+function getRedirectUrl(page) {
+  const isLocal = ["localhost", "127.0.0.1", "[::1]"].includes(
+    window.location.hostname
+  );
+  const base = (
+    isLocal ? window.location.origin : SECUREDOC_CONFIG.SITE_URL || window.location.origin
+  )
+    .trim()
+    .replace(/\/$/, "");
+  const safePage = page.startsWith("/") ? page : `/${page}`;
+  return `${base}${safePage}`;
+}
+
+/* If the OAuth provider bounced back with an error (e.g. "Unable to exchange
+   external code"), it arrives as ?error_description=... — read and clear it. */
+function consumeAuthErrorFromUrl() {
+  const search = new URLSearchParams(window.location.search);
+  const hash = new URLSearchParams(window.location.hash.replace(/^#/, ""));
+  const description =
+    search.get("error_description") || hash.get("error_description");
+  const code = search.get("error") || hash.get("error");
+  if (!description && !code) return null;
+  window.history.replaceState({}, "", window.location.pathname);
+  return decodeURIComponent((description || code).replace(/\+/g, " "));
+}
+
+/* Wait for Supabase to finish processing the URL (implicit flow puts tokens
+   in the hash; detectSessionInUrl extracts them async). onAuthStateChange
+   fires INITIAL_SESSION once that is done — either with a session or null. */
+function waitForSession() {
+  return new Promise((resolve) => {
+    const { data: { subscription } } = sb.auth.onAuthStateChange((event, session) => {
+      if (event === "INITIAL_SESSION" || event === "SIGNED_IN") {
+        subscription.unsubscribe();
+        // Clean auth tokens out of the address bar.
+        if (window.location.hash.includes("access_token")) {
+          window.history.replaceState(
+            {},
+            "",
+            window.location.pathname + window.location.search
+          );
+        }
+        resolve(session);
+      }
+    });
+  });
+}
+
+/* Used by app.html and dashboard.html — redirects to landing if not signed in.
+   If the OAuth provider returned an error, surface it instead of silently
+   bouncing, so configuration problems are visible. */
 async function requireOwnerSession() {
-  const { data } = await sb.auth.getSession();
-  if (!data.session) {
+  const authError = consumeAuthErrorFromUrl();
+  if (authError) {
+    alert(
+      "Google sign-in failed.\n\n" +
+        authError +
+        "\n\nThis usually means the Google Client ID or Client Secret in " +
+        "Supabase (Authentication → Providers → Google) is incorrect."
+    );
     window.location.href = "index.html";
     return null;
   }
-  return data.session;
+
+  const session = await waitForSession();
+  if (!session) {
+    window.location.href = "index.html";
+    return null;
+  }
+  return session;
 }
 
 async function signInWithGoogle(redirectPage) {
-  await sb.auth.signInWithOAuth({
+  const { error } = await sb.auth.signInWithOAuth({
     provider: "google",
-    options: {
-      redirectTo: `${window.location.origin}${window.location.pathname.replace(/[^/]*$/, "")}${redirectPage}`,
-    },
+    options: { redirectTo: getRedirectUrl(redirectPage) },
   });
+  if (error) throw error;
 }
 
 async function signOut() {
