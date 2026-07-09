@@ -1,0 +1,158 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>SecureDoc — Share confidential documents with control</title>
+  <meta name="description" content="Upload a PDF, lock it to one email, and see exactly who read it — page by page. Every view is watermarked with the reader's email, IP and time." />
+  <link rel="stylesheet" href="css/styles.css" />
+</head>
+<body>
+
+  <header class="site-header">
+    <div class="container nav">
+      <a class="brand" href="index.html">
+        <span class="brand-mark">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="square"><path d="M12 3l8 4v5c0 5-3.5 8-8 9-4.5-1-8-4-8-9V7l8-4z"/></svg>
+        </span>
+        SecureDoc
+      </a>
+      <nav class="nav-links">
+        <a href="#features" class="nav-hide-mobile">Features</a>
+        <a href="#how" class="nav-hide-mobile">How it works</a>
+        <button class="btn btn-primary btn-sm" id="signin-btn">
+          <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="square"><path d="M15 3h6v18h-6M10 17l5-5-5-5M15 12H3"/></svg>
+          Sign in with Google
+        </button>
+      </nav>
+    </div>
+  </header>
+
+  <section class="hero">
+    <div class="container">
+      <h1>Share confidential PDFs.<br /><span class="accent-block">Know exactly who read them.</span></h1>
+      <p class="lede">
+        Upload a document, lock it to one email address, and send a link.
+        The reader verifies their email, and every page they see is watermarked
+        with their identity. You watch it all from your dashboard.
+      </p>
+      <div class="hero-actions">
+        <button class="btn btn-primary" id="hero-cta">Start sharing securely</button>
+        <a class="btn" href="#how">See how it works</a>
+      </div>
+    </div>
+  </section>
+
+  <section class="section" id="features">
+    <div class="container">
+      <h2 class="section-title">Built for documents that matter</h2>
+      <p class="section-sub">Everything you need to send a sensitive file without losing control of it.</p>
+      <div class="feature-grid">
+        <div class="feature-cell">
+          <span class="icon-box">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="square"><rect x="4" y="10" width="16" height="11"/><path d="M8 10V7a4 4 0 018 0v3"/></svg>
+          </span>
+          <h3>Locked to one email</h3>
+          <p>Each link works for exactly one email address. Anyone else who opens it is refused — no exceptions.</p>
+        </div>
+        <div class="feature-cell">
+          <span class="icon-box">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="square"><path d="M22 6l-10 7L2 6"/><rect x="2" y="4" width="20" height="16"/></svg>
+          </span>
+          <h3>Email verified by code</h3>
+          <p>Before the document opens, the reader proves who they are with a one-time code sent to their inbox.</p>
+        </div>
+        <div class="feature-cell">
+          <span class="icon-box">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="square"><path d="M12 2v20M2 12h20M5 5l14 14M19 5L5 19"/></svg>
+          </span>
+          <h3>Dynamic watermarks</h3>
+          <p>Every page is stamped with the reader's email, IP address and timestamp — on screen and in downloads.</p>
+        </div>
+        <div class="feature-cell">
+          <span class="icon-box">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="square"><path d="M3 21h18M6 21V10M12 21V4M18 21v-9"/></svg>
+          </span>
+          <h3>Page-by-page analytics</h3>
+          <p>See who opened your document, when, from where, and how long they spent on every single page.</p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <section class="section section-alt" id="how">
+    <div class="container">
+      <h2 class="section-title">How it works</h2>
+      <p class="section-sub">Four steps from upload to insight.</p>
+      <div class="steps">
+        <div class="step">
+          <span class="step-num">1</span>
+          <div>
+            <h3>Upload your PDF</h3>
+            <p>Sign in with Google and drop your file. It is stored privately — nobody can reach it without going through you.</p>
+          </div>
+        </div>
+        <div class="step">
+          <span class="step-num">2</span>
+          <div>
+            <h3>Lock it to an email</h3>
+            <p>Enter the recipient's email address. A unique link is generated that only works for that person.</p>
+          </div>
+        </div>
+        <div class="step">
+          <span class="step-num">3</span>
+          <div>
+            <h3>They verify, then read</h3>
+            <p>Your recipient enters their email and a one-time code. The document opens with their identity watermarked on every page.</p>
+          </div>
+        </div>
+        <div class="step">
+          <span class="step-num">4</span>
+          <div>
+            <h3>You see everything</h3>
+            <p>Your dashboard shows every open: who, when, from which IP, total reading time, and time spent per page.</p>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <section class="cta-band">
+    <div class="container">
+      <h2>Your next confidential document deserves better than an email attachment.</h2>
+      <button class="btn btn-primary" id="band-cta">Get started — it's free</button>
+    </div>
+  </section>
+
+  <footer class="site-footer">
+    <div class="container">
+      <span>SecureDoc — controlled document sharing.</span>
+      <span>Files encrypted at rest and in transit.</span>
+    </div>
+  </footer>
+
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script>
+  <script src="js/config.js"></script>
+  <script src="js/common.js"></script>
+  <script>
+    async function start() {
+      const { data } = await sb.auth.getSession();
+      if (data.session) {
+        window.location.href = "app.html";
+      } else {
+        await signInWithGoogle("app.html");
+      }
+    }
+    $("#signin-btn").addEventListener("click", start);
+    $("#hero-cta").addEventListener("click", start);
+    $("#band-cta").addEventListener("click", start);
+
+    // If already signed in, make the nav button a shortcut to the app.
+    sb.auth.getSession().then(({ data }) => {
+      if (data.session) {
+        $("#signin-btn").innerHTML = "Open dashboard";
+      }
+    });
+  </script>
+</body>
+</html>

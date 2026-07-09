@@ -1,0 +1,251 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Documents — SecureDoc</title>
+  <link rel="stylesheet" href="css/styles.css" />
+</head>
+<body>
+
+  <header class="site-header">
+    <div class="container nav">
+      <a class="brand" href="index.html">
+        <span class="brand-mark">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="square"><path d="M12 3l8 4v5c0 5-3.5 8-8 9-4.5-1-8-4-8-9V7l8-4z"/></svg>
+        </span>
+        SecureDoc
+      </a>
+      <nav class="nav-links">
+        <a href="app.html">Documents</a>
+        <a href="dashboard.html">Analytics</a>
+        <button class="btn btn-sm" id="signout-btn">Sign out</button>
+      </nav>
+    </div>
+  </header>
+
+  <main class="container" id="main" style="display:none">
+    <div class="page-head">
+      <h1>Your documents</h1>
+      <p id="user-email" class="mono"></p>
+    </div>
+
+    <div class="alert hidden" id="app-alert"></div>
+
+    <div class="grid-2" style="margin-bottom: 36px;">
+      <div class="card">
+        <div class="panel-label">Upload</div>
+        <div class="dropzone" id="dropzone">
+          <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="square"><path d="M12 16V4M6 10l6-6 6 6M4 20h16"/></svg>
+          <p>Drop a PDF here or tap to choose</p>
+          <p class="field-hint">PDF only, up to 50 MB</p>
+        </div>
+        <input type="file" id="file-input" accept="application/pdf" class="hidden" />
+      </div>
+      <div class="card card-flat">
+        <div class="panel-label">How sharing works</div>
+        <p style="font-size:0.92rem; color: var(--ink-soft);">
+          After uploading, add a recipient's email to a document to generate a
+          private link. The link only works for that email — the recipient
+          verifies with a one-time code, and everything they see is watermarked
+          with their email, IP address and the time of viewing.
+        </p>
+      </div>
+    </div>
+
+    <div class="panel-label">Documents</div>
+    <div class="doc-list" id="doc-list">
+      <p class="loading-note">Loading…</p>
+    </div>
+  </main>
+
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script>
+  <script src="js/config.js"></script>
+  <script src="js/common.js"></script>
+  <script>
+    const alertEl = () => $("#app-alert");
+    let session = null;
+
+    async function init() {
+      session = await requireOwnerSession();
+      if (!session) return;
+      $("#user-email").textContent = session.user.email;
+      $("#main").style.display = "block";
+      await loadDocuments();
+    }
+
+    /* ------------------------------ upload ------------------------------ */
+
+    const dropzone = $("#dropzone");
+    const fileInput = $("#file-input");
+
+    dropzone.addEventListener("click", () => fileInput.click());
+    dropzone.addEventListener("dragover", (e) => {
+      e.preventDefault();
+      dropzone.classList.add("dragover");
+    });
+    dropzone.addEventListener("dragleave", () => dropzone.classList.remove("dragover"));
+    dropzone.addEventListener("drop", (e) => {
+      e.preventDefault();
+      dropzone.classList.remove("dragover");
+      if (e.dataTransfer.files.length) uploadFile(e.dataTransfer.files[0]);
+    });
+    fileInput.addEventListener("change", () => {
+      if (fileInput.files.length) uploadFile(fileInput.files[0]);
+      fileInput.value = "";
+    });
+
+    async function uploadFile(file) {
+      clearAlert(alertEl());
+      if (file.type !== "application/pdf") {
+        setAlert(alertEl(), "Only PDF files are supported.", "error");
+        return;
+      }
+      if (file.size > 50 * 1024 * 1024) {
+        setAlert(alertEl(), "File is larger than 50 MB.", "error");
+        return;
+      }
+
+      setAlert(alertEl(), `Uploading "${file.name}"…`, "info");
+      const path = `${session.user.id}/${crypto.randomUUID()}.pdf`;
+
+      const { error: upErr } = await sb.storage
+        .from("documents")
+        .upload(path, file, { contentType: "application/pdf" });
+      if (upErr) {
+        setAlert(alertEl(), `Upload failed: ${upErr.message}`, "error");
+        return;
+      }
+
+      const { error: dbErr } = await sb.from("documents").insert({
+        owner_id: session.user.id,
+        title: file.name.replace(/\.pdf$/i, ""),
+        storage_path: path,
+        file_size: file.size,
+      });
+      if (dbErr) {
+        setAlert(alertEl(), `Could not save document: ${dbErr.message}`, "error");
+        return;
+      }
+
+      setAlert(alertEl(), `"${file.name}" uploaded. Add a recipient below to share it.`, "success");
+      await loadDocuments();
+    }
+
+    /* ---------------------------- documents ----------------------------- */
+
+    async function loadDocuments() {
+      const { data: docs, error } = await sb
+        .from("documents")
+        .select("id, title, file_size, storage_path, created_at, share_links ( id, token, allowed_email, is_active, created_at )")
+        .order("created_at", { ascending: false });
+
+      const list = $("#doc-list");
+      if (error) {
+        list.innerHTML = `<p class="loading-note">Could not load documents.</p>`;
+        return;
+      }
+      if (!docs.length) {
+        list.innerHTML = `<div class="card card-flat"><p style="color:var(--ink-soft)">No documents yet. Upload a PDF above to get started.</p></div>`;
+        return;
+      }
+
+      list.innerHTML = docs.map(renderDoc).join("");
+      docs.forEach(attachDocHandlers);
+    }
+
+    function renderDoc(doc) {
+      const activeLinks = (doc.share_links || []).filter((l) => l.is_active);
+      const shares = activeLinks.map((link) => `
+        <div class="share-row" data-link-id="${link.id}">
+          <span class="share-email">${escapeHtml(link.allowed_email)}</span>
+          <span class="share-row-actions">
+            <button class="btn btn-sm copy-link-btn" data-token="${link.token}">Copy link</button>
+            <button class="btn btn-sm btn-danger revoke-btn" data-link-id="${link.id}">Revoke</button>
+          </span>
+        </div>`).join("");
+
+      return `
+        <div class="doc-row" data-doc-id="${doc.id}">
+          <div class="doc-row-head">
+            <div>
+              <h3>${escapeHtml(doc.title)}</h3>
+              <div class="doc-meta">${formatBytes(doc.file_size)} · uploaded ${formatDate(doc.created_at)}</div>
+            </div>
+            <div class="doc-actions">
+              <button class="btn btn-sm btn-primary share-btn">Share with…</button>
+              <button class="btn btn-sm btn-danger delete-btn">Delete</button>
+            </div>
+          </div>
+          <form class="share-form hidden" style="margin-top:16px; display:flex; gap:10px; flex-wrap:wrap;">
+            <input type="email" required placeholder="recipient@company.com" style="flex:1; min-width: 200px;" />
+            <button class="btn btn-sm btn-dark" type="submit">Create link</button>
+          </form>
+          ${activeLinks.length ? `<div class="share-list">${shares}</div>` : ""}
+        </div>`;
+    }
+
+    function attachDocHandlers(doc) {
+      const row = document.querySelector(`.doc-row[data-doc-id="${doc.id}"]`);
+
+      row.querySelector(".share-btn").addEventListener("click", () => {
+        const form = row.querySelector(".share-form");
+        form.classList.toggle("hidden");
+        if (!form.classList.contains("hidden")) form.querySelector("input").focus();
+      });
+
+      row.querySelector(".share-form").addEventListener("submit", async (e) => {
+        e.preventDefault();
+        const email = e.target.querySelector("input").value.trim().toLowerCase();
+        const { data: link, error } = await sb
+          .from("share_links")
+          .insert({ document_id: doc.id, allowed_email: email })
+          .select("token")
+          .single();
+        if (error) {
+          setAlert(alertEl(), `Could not create link: ${error.message}`, "error");
+          return;
+        }
+        await copyLink(link.token);
+        setAlert(alertEl(), `Link for ${email} created and copied to clipboard.`, "success");
+        await loadDocuments();
+      });
+
+      row.querySelector(".delete-btn").addEventListener("click", async () => {
+        if (!confirm(`Delete "${doc.title}" and all its links and analytics? This cannot be undone.`)) return;
+        await sb.storage.from("documents").remove([doc.storage_path]);
+        await sb.from("documents").delete().eq("id", doc.id);
+        await loadDocuments();
+      });
+
+      row.querySelectorAll(".copy-link-btn").forEach((btn) =>
+        btn.addEventListener("click", async () => {
+          await copyLink(btn.dataset.token);
+          btn.textContent = "Copied";
+          setTimeout(() => (btn.textContent = "Copy link"), 1500);
+        })
+      );
+
+      row.querySelectorAll(".revoke-btn").forEach((btn) =>
+        btn.addEventListener("click", async () => {
+          await sb.from("share_links").update({ is_active: false }).eq("id", btn.dataset.linkId);
+          await loadDocuments();
+        })
+      );
+    }
+
+    async function copyLink(token) {
+      const base = window.location.href.replace(/[^/]*$/, "");
+      const url = `${base}view.html?t=${token}`;
+      try {
+        await navigator.clipboard.writeText(url);
+      } catch {
+        prompt("Copy this link:", url);
+      }
+    }
+
+    $("#signout-btn").addEventListener("click", signOut);
+    init();
+  </script>
+</body>
+</html>

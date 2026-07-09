@@ -1,0 +1,320 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Secure document — SecureDoc</title>
+  <link rel="stylesheet" href="css/styles.css" />
+</head>
+<body>
+
+  <header class="site-header">
+    <div class="container nav">
+      <a class="brand" href="index.html">
+        <span class="brand-mark">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="square"><path d="M12 3l8 4v5c0 5-3.5 8-8 9-4.5-1-8-4-8-9V7l8-4z"/></svg>
+        </span>
+        SecureDoc
+      </a>
+      <span class="badge badge-amber">Confidential</span>
+    </div>
+  </header>
+
+  <!-- Step 1: email -->
+  <div class="gate-wrap" id="gate-email">
+    <div class="card gate-card">
+      <div class="panel-label">Secure document</div>
+      <h2>This document is protected</h2>
+      <p>Enter your email address to request access. Only the intended recipient can open this file.</p>
+      <div class="alert hidden" id="email-alert"></div>
+      <form id="email-form">
+        <div class="field">
+          <label for="email-input">Your email</label>
+          <input type="email" id="email-input" required autocomplete="email" placeholder="you@company.com" />
+        </div>
+        <button class="btn btn-primary btn-block" type="submit" id="email-submit">Continue</button>
+      </form>
+    </div>
+  </div>
+
+  <!-- Step 2: OTP -->
+  <div class="gate-wrap hidden" id="gate-otp">
+    <div class="card gate-card">
+      <div class="panel-label">Verification</div>
+      <h2>Check your inbox</h2>
+      <p>We sent a one-time code to <strong id="otp-email-label"></strong>. Enter it below to open the document.</p>
+      <div class="alert hidden" id="otp-alert"></div>
+      <form id="otp-form">
+        <div class="field">
+          <label for="otp-input">Verification code</label>
+          <input type="text" id="otp-input" class="otp-input" required inputmode="numeric" autocomplete="one-time-code" maxlength="6" placeholder="000000" />
+        </div>
+        <button class="btn btn-primary btn-block" type="submit" id="otp-submit">Verify and open</button>
+      </form>
+    </div>
+  </div>
+
+  <!-- Refused -->
+  <div class="gate-wrap hidden" id="gate-denied">
+    <div class="card gate-card">
+      <div class="panel-label">Access denied</div>
+      <h2>You don't have access</h2>
+      <p id="denied-message">This document was shared with a different email address. If you believe this is a mistake, contact the person who sent you the link.</p>
+    </div>
+  </div>
+
+  <!-- Viewer -->
+  <main class="container hidden" id="viewer">
+    <div class="viewer-bar">
+      <div>
+        <h2 id="doc-title">Document</h2>
+        <div class="viewer-meta" id="viewer-meta"></div>
+      </div>
+      <button class="btn btn-dark btn-sm" id="download-btn">
+        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="square"><path d="M12 4v12M6 10l6 6 6-6M4 20h16"/></svg>
+        Download PDF
+      </button>
+    </div>
+    <div id="pdf-container">
+      <p class="loading-note">Preparing your watermarked document…</p>
+    </div>
+  </main>
+
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/pdfjs-dist@3.11.174/build/pdf.min.js"></script>
+  <script src="js/config.js"></script>
+  <script src="js/common.js"></script>
+  <script>
+    pdfjsLib.GlobalWorkerOptions.workerSrc =
+      "https://cdn.jsdelivr.net/npm/pdfjs-dist@3.11.174/build/pdf.worker.min.js";
+
+    const shareToken = new URLSearchParams(window.location.search).get("t");
+    let viewerEmail = "";
+    let viewerJwt = "";
+    let sessionId = "";
+    let pdfBlob = null;
+    let docTitle = "document";
+
+    if (!shareToken) showDenied("This link is invalid or incomplete.");
+
+    /* ------------------------- step 1: email check ------------------------ */
+
+    $("#email-form").addEventListener("submit", async (e) => {
+      e.preventDefault();
+      const btn = $("#email-submit");
+      btn.disabled = true;
+      clearAlert($("#email-alert"));
+      viewerEmail = $("#email-input").value.trim().toLowerCase();
+
+      try {
+        const res = await fetch(`${FUNCTIONS_URL}/check-access`, {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            apikey: SECUREDOC_CONFIG.SUPABASE_ANON_KEY,
+            Authorization: `Bearer ${SECUREDOC_CONFIG.SUPABASE_ANON_KEY}`,
+          },
+          body: JSON.stringify({ token: shareToken, email: viewerEmail }),
+        });
+        const body = await res.json();
+
+        if (res.status === 404) {
+          showDenied("This link is invalid or has been revoked by the sender.");
+          return;
+        }
+        if (!body.allowed) {
+          showDenied();
+          return;
+        }
+
+        docTitle = body.title || "Document";
+
+        // Email is authorized — send the one-time code.
+        const { error } = await sb.auth.signInWithOtp({
+          email: viewerEmail,
+          options: { shouldCreateUser: true },
+        });
+        if (error) {
+          setAlert($("#email-alert"), `Could not send code: ${error.message}`, "error");
+          return;
+        }
+
+        $("#otp-email-label").textContent = viewerEmail;
+        hide($("#gate-email"));
+        show($("#gate-otp"));
+        $("#otp-input").focus();
+      } catch {
+        setAlert($("#email-alert"), "Something went wrong. Please try again.", "error");
+      } finally {
+        btn.disabled = false;
+      }
+    });
+
+    function showDenied(message) {
+      hide($("#gate-email"));
+      hide($("#gate-otp"));
+      if (message) $("#denied-message").textContent = message;
+      show($("#gate-denied"));
+    }
+
+    /* ----------------------- step 2: verify the code ---------------------- */
+
+    $("#otp-form").addEventListener("submit", async (e) => {
+      e.preventDefault();
+      const btn = $("#otp-submit");
+      btn.disabled = true;
+      clearAlert($("#otp-alert"));
+
+      const code = $("#otp-input").value.trim();
+      const { data, error } = await sb.auth.verifyOtp({
+        email: viewerEmail,
+        token: code,
+        type: "email",
+      });
+
+      if (error || !data.session) {
+        setAlert($("#otp-alert"), "That code is incorrect or has expired. Please check and try again.", "error");
+        btn.disabled = false;
+        return;
+      }
+
+      viewerJwt = data.session.access_token;
+      hide($("#gate-otp"));
+      show($("#viewer"));
+      await loadDocument();
+    });
+
+    /* --------------------- fetch + render watermarked PDF ----------------- */
+
+    async function loadDocument() {
+      try {
+        const res = await fetch(`${FUNCTIONS_URL}/serve-document`, {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            apikey: SECUREDOC_CONFIG.SUPABASE_ANON_KEY,
+            Authorization: `Bearer ${viewerJwt}`,
+          },
+          body: JSON.stringify({ token: shareToken }),
+        });
+
+        if (!res.ok) {
+          const body = await res.json().catch(() => ({}));
+          showDenied(body.error || "The document could not be loaded.");
+          return;
+        }
+
+        sessionId = res.headers.get("x-session-id") || "";
+        const headerTitle = res.headers.get("x-doc-title");
+        if (headerTitle) docTitle = decodeURIComponent(headerTitle);
+
+        pdfBlob = await res.blob();
+        $("#doc-title").textContent = docTitle;
+        $("#viewer-meta").textContent =
+          `Watermarked for ${viewerEmail} · views are recorded`;
+
+        await renderPdf(await pdfBlob.arrayBuffer());
+        startTracking();
+      } catch {
+        showDenied("The document could not be loaded. Please try the link again.");
+      }
+    }
+
+    async function renderPdf(buffer) {
+      const container = $("#pdf-container");
+      container.innerHTML = "";
+      const pdf = await pdfjsLib.getDocument({ data: buffer }).promise;
+
+      for (let i = 1; i <= pdf.numPages; i++) {
+        const page = await pdf.getPage(i);
+        const scale = Math.min(1.6, (container.clientWidth || 800) / page.getViewport({ scale: 1 }).width);
+        const viewport = page.getViewport({ scale: scale * (window.devicePixelRatio || 1) });
+
+        const canvas = document.createElement("canvas");
+        canvas.width = viewport.width;
+        canvas.height = viewport.height;
+        canvas.style.width = `${viewport.width / (window.devicePixelRatio || 1)}px`;
+        canvas.dataset.page = i;
+        container.appendChild(canvas);
+
+        await page.render({ canvasContext: canvas.getContext("2d"), viewport }).promise;
+      }
+      observePages();
+    }
+
+    /* --------------------------- download ------------------------------- */
+
+    $("#download-btn").addEventListener("click", () => {
+      if (!pdfBlob) return;
+      const a = document.createElement("a");
+      a.href = URL.createObjectURL(pdfBlob);
+      a.download = `${docTitle}.pdf`;
+      a.click();
+      URL.revokeObjectURL(a.href);
+    });
+
+    /* ----------------------- page-by-page tracking ------------------------ */
+
+    const pageSeconds = {};   // page number -> seconds
+    let currentPage = 1;
+    let totalSeconds = 0;
+    let dirty = false;
+
+    function observePages() {
+      const visibility = new Map();
+      const observer = new IntersectionObserver(
+        (entries) => {
+          entries.forEach((e) =>
+            visibility.set(Number(e.target.dataset.page), e.intersectionRatio)
+          );
+          let best = currentPage;
+          let bestRatio = 0;
+          visibility.forEach((ratio, page) => {
+            if (ratio > bestRatio) { bestRatio = ratio; best = page; }
+          });
+          currentPage = best;
+        },
+        { threshold: [0, 0.25, 0.5, 0.75, 1] }
+      );
+      document.querySelectorAll("#pdf-container canvas").forEach((c) => observer.observe(c));
+    }
+
+    function startTracking() {
+      setInterval(() => {
+        if (document.hidden) return;
+        totalSeconds += 1;
+        pageSeconds[currentPage] = (pageSeconds[currentPage] || 0) + 1;
+        dirty = true;
+      }, 1000);
+
+      setInterval(flushStats, 10000);
+      document.addEventListener("visibilitychange", () => {
+        if (document.hidden) flushStats();
+      });
+      window.addEventListener("pagehide", flushStats);
+    }
+
+    function flushStats() {
+      if (!dirty || !sessionId) return;
+      dirty = false;
+      fetch(`${FUNCTIONS_URL}/track-view`, {
+        method: "POST",
+        keepalive: true,
+        headers: {
+          "Content-Type": "application/json",
+          apikey: SECUREDOC_CONFIG.SUPABASE_ANON_KEY,
+          Authorization: `Bearer ${viewerJwt}`,
+        },
+        body: JSON.stringify({
+          session_id: sessionId,
+          total_seconds: totalSeconds,
+          pages: Object.entries(pageSeconds).map(([page, seconds]) => ({
+            page: Number(page),
+            seconds,
+          })),
+        }),
+      }).catch(() => { dirty = true; });
+    }
+  </script>
+</body>
+</html>
