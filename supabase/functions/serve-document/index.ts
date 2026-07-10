@@ -1,7 +1,10 @@
-// serve-document — the only path through which a viewer receives file bytes.
-// Supports both private (OTP-verified email) and public (anonymous) links.
-// Every page is watermarked server-side; the original file never leaves
-// storage without a stamp.
+// serve-document — the only path through which viewers receive file bytes.
+// Private links (require_verification=true): viewer must have an OTP-verified
+//   Supabase session whose email is in link_recipients.
+// Public links (require_verification=false): anonymous session + a self-reported
+//   name/email label used for the watermark.
+// Every page is stamped server-side; the original file never leaves storage
+// without a watermark.
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
 import {
   degrees,
@@ -28,19 +31,20 @@ Deno.serve(async (req) => {
       Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!,
     );
 
-    // Verify the viewer has a valid Supabase session (OTP or anonymous).
     const { data: userData, error: userError } = await admin.auth.getUser(jwt);
     if (userError || !userData.user) {
       return jsonResponse({ error: "Not authenticated" }, 401);
     }
 
     const isAnonymous = userData.user.is_anonymous ?? false;
-    const viewerEmail = isAnonymous ? null : userData.user.email?.toLowerCase() ?? null;
+    const viewerEmail = isAnonymous
+      ? null
+      : userData.user.email?.toLowerCase() ?? null;
 
     const { data: link } = await admin
       .from("share_links")
       .select(
-        "id, allowed_email, is_active, is_public, access_expires_at, document_id, documents ( id, title, storage_path, download_allowed )",
+        "id, is_active, require_verification, access_expires_at, document_id, documents ( id, title, storage_path, download_allowed )",
       )
       .eq("token", token)
       .single();
@@ -49,8 +53,10 @@ Deno.serve(async (req) => {
       return jsonResponse({ error: "Link not found or revoked" }, 404);
     }
 
-    // Expiry check.
-    if (link.access_expires_at && new Date(link.access_expires_at) < new Date()) {
+    if (
+      link.access_expires_at &&
+      new Date(link.access_expires_at) < new Date()
+    ) {
       return jsonResponse({ error: "This link has expired" }, 403);
     }
 
@@ -62,22 +68,27 @@ Deno.serve(async (req) => {
     let watermarkText: string;
     let sessionEmail: string;
 
-    if (link.is_public) {
-      // Public link — viewer provided their name/email (unverified) for the watermark.
-      const label = (public_label ?? "").trim().slice(0, 80) || ip;
-      watermarkText = `${label}  ·  ${ip}  ·  ${timestamp}`;
-      sessionEmail = label;
-    } else {
-      // Private link — must be accessed with the matching verified email.
+    if (link.require_verification) {
+      // Private link: must have an OTP-verified session email in recipient list.
       if (!viewerEmail) {
         return jsonResponse({ error: "Access denied" }, 403);
       }
-      const expected = (link.allowed_email ?? "").trim().toLowerCase();
-      if (viewerEmail !== expected) {
+      const { data: recipient } = await admin
+        .from("link_recipients")
+        .select("id")
+        .eq("link_id", link.id)
+        .eq("email", viewerEmail)
+        .maybeSingle();
+      if (!recipient) {
         return jsonResponse({ error: "Access denied" }, 403);
       }
       watermarkText = `${viewerEmail}  ·  ${ip}  ·  ${timestamp}`;
       sessionEmail = viewerEmail;
+    } else {
+      // Public link: viewer provided a self-reported name/email label.
+      const label = (public_label ?? "").trim().slice(0, 80) || ip;
+      watermarkText = `${label}  ·  ${ip}  ·  ${timestamp}`;
+      sessionEmail = label;
     }
 
     const doc = link.documents as unknown as {
@@ -94,7 +105,6 @@ Deno.serve(async (req) => {
       return jsonResponse({ error: "File unavailable" }, 500);
     }
 
-    // Stamp every page with a diagonal watermark and a small footer line.
     const pdf = await PDFDocument.load(await file.arrayBuffer(), {
       ignoreEncryption: true,
     });
@@ -132,7 +142,6 @@ Deno.serve(async (req) => {
     }
     const stamped = await pdf.save();
 
-    // Record the view session.
     const { data: sessionRow } = await admin
       .from("view_sessions")
       .insert({

@@ -143,22 +143,17 @@
 
         </div><!-- /charts-row -->
 
-        <!-- Settings + share links -->
-        <div class="detail-grid">
-
-          <!-- Settings card -->
-          <div class="card" style="padding:20px">
-            <div class="panel-label">Document settings</div>
-
-            <div class="rename-row" style="border-top:none;padding-top:2px;">
+        <!-- Document settings strip -->
+        <div class="card" style="padding:16px 20px;margin-bottom:18px;">
+          <div style="display:flex;align-items:center;gap:20px;flex-wrap:wrap;">
+            <div class="rename-row" style="border:none;padding:0;flex:1;min-width:220px;">
               <input type="text" id="rename-input" placeholder="Document name" />
               <button class="btn btn-sm btn-dark" id="btn-rename">Rename</button>
             </div>
-
-            <div class="toggle-row">
-              <div class="toggle-label-group">
-                <div class="toggle-label">Allow download</div>
-                <div class="toggle-hint">Viewers can save the watermarked PDF</div>
+            <div style="display:flex;align-items:center;gap:10px;flex-shrink:0;">
+              <div>
+                <div style="font-weight:600;font-size:0.88rem;">Allow download</div>
+                <div style="font-size:0.74rem;color:var(--ink-soft);">Viewers can save the watermarked PDF</div>
               </div>
               <label class="toggle-switch">
                 <input type="checkbox" id="download-toggle" checked />
@@ -166,44 +161,30 @@
               </label>
             </div>
           </div>
+        </div>
 
-          <!-- Share links card -->
-          <div class="card" style="padding:20px">
-            <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:14px;gap:10px;flex-wrap:wrap;">
-              <div class="panel-label" style="margin:0">Share links</div>
-              <div style="display:flex;gap:7px;flex-wrap:wrap;">
-                <button class="btn btn-sm btn-primary" id="btn-show-add-email">Add recipient</button>
-                <button class="btn btn-sm" id="btn-show-add-public">Public link</button>
+        <!-- Sharing section -->
+        <div class="sharing-section">
+          <div class="panel-label" style="margin-bottom:12px;">Sharing</div>
+          <div class="links-type-grid">
+            <!-- Private link card -->
+            <div class="link-type-card" id="private-link-card">
+              <div class="link-type-card-head">
+                <div class="panel-label">Private link</div>
+                <div class="link-type-card-desc">Viewers must verify their email to access</div>
               </div>
+              <div id="private-link-body"></div>
             </div>
-
-            <div id="links-list" class="links-list"></div>
-
-            <!-- Add email recipient -->
-            <div id="add-email-form" class="hidden" style="padding-top:12px;border-top:1.5px solid var(--line-soft);">
-              <div class="panel-label">New email recipient</div>
-              <div style="display:grid;grid-template-columns:1fr auto;gap:8px;margin-top:8px;">
-                <input type="email" id="new-email" placeholder="recipient@company.com" />
-                <button class="btn btn-sm btn-dark" id="btn-add-email">Add</button>
+            <!-- Public link card -->
+            <div class="link-type-card" id="public-link-card">
+              <div class="link-type-card-head">
+                <div class="panel-label">Public link</div>
+                <div class="link-type-card-desc">Anyone with the link can enter a name/email and view</div>
               </div>
-              <div style="margin-top:8px;">
-                <label style="font-size:0.78rem;font-weight:600;">Expires (optional)</label>
-                <input type="datetime-local" id="new-email-expiry" class="expiry-input" style="width:100%;margin-top:4px;" />
-              </div>
-            </div>
-
-            <!-- Public link -->
-            <div id="add-public-form" class="hidden" style="padding-top:12px;border-top:1.5px solid var(--line-soft);">
-              <div class="panel-label">New public link</div>
-              <p style="font-size:0.78rem;color:var(--ink-soft);margin:5px 0 10px;">Anyone with this link can enter their name/email (unverified) and view the document.</p>
-              <div style="display:grid;grid-template-columns:1fr auto;gap:8px;">
-                <input type="datetime-local" id="new-public-expiry" class="expiry-input" placeholder="Expiry (optional)" />
-                <button class="btn btn-sm btn-dark" id="btn-add-public">Create</button>
-              </div>
+              <div id="public-link-body"></div>
             </div>
           </div>
-
-        </div><!-- /detail-grid -->
+        </div>
 
         <!-- Sessions table -->
         <div class="panel-label" style="margin-bottom:10px">Viewer sessions</div>
@@ -236,6 +217,7 @@
     ==================================================================== */
     let session = null;
     let selectedDocId = null;
+    let currentDocId = null;
     let docsCache = [];
 
     // Chart instances
@@ -315,6 +297,7 @@
     ==================================================================== */
     async function selectDoc(docId) {
       selectedDocId = docId;
+      currentDocId = docId;
       opensLevel = "doc"; pagesLevel = "doc";
       opensViewer = ""; pagesViewer = "";
 
@@ -352,7 +335,7 @@
           .eq("document_id", docId)
           .order("opened_at", { ascending: false }),
         sb.from("share_links")
-          .select("id, token, allowed_email, is_public, is_active, access_expires_at, created_at")
+          .select("id, token, require_verification, is_active, access_expires_at, created_at")
           .eq("document_id", docId)
           .order("created_at", { ascending: false }),
       ]);
@@ -369,11 +352,23 @@
         currentPageViews = [];
       }
 
-      renderMetrics(currentSessions, links || []);
+      // Fetch recipients for all links.
+      const currentLinks = links || [];
+      const linkIds = currentLinks.map(l => l.id);
+      let allRecipients = [];
+      if (linkIds.length) {
+        const { data: recips } = await sb.from("link_recipients")
+          .select("id, link_id, email, added_at")
+          .in("link_id", linkIds)
+          .order("added_at");
+        allRecipients = recips || [];
+      }
+
+      renderMetrics(currentSessions, currentLinks);
       populateViewerDropdowns(currentSessions);
       updateOpensChart();
       updatePagesChart();
-      renderLinks(links || []);
+      renderLinkCards(currentLinks, allRecipients);
       renderSessions(currentSessions, currentPageViews);
     }
 
@@ -560,57 +555,148 @@
     });
 
     /* ====================================================================
-       Share links
+       Share link cards (private + public)
     ==================================================================== */
-    function renderLinks(links) {
-      const container = $("#links-list");
+    function renderLinkCards(links, recipients) {
+      const recipsByLink = {};
+      recipients.forEach(r => { (recipsByLink[r.link_id] ||= []).push(r); });
+
       const active = links.filter(l => l.is_active);
-      if (!active.length) {
-        container.innerHTML = `<p style="font-size:0.82rem;color:var(--ink-soft);padding-bottom:6px;">No active links yet.</p>`;
+      const privateLink = active.find(l =>  l.require_verification) || null;
+      const publicLink  = active.find(l => !l.require_verification) || null;
+
+      renderOneLinkCard("private", privateLink, recipsByLink[privateLink?.id] || []);
+      renderOneLinkCard("public",  publicLink,  recipsByLink[publicLink?.id]  || []);
+    }
+
+    function renderOneLinkCard(type, link, recipients) {
+      const body = $(`#${type}-link-body`);
+      const isPrivate = type === "private";
+
+      if (!link) {
+        body.innerHTML = `
+          <div class="link-empty">
+            <p>${isPrivate
+              ? "No private link yet. Create one to share with specific recipients who must verify their email."
+              : "No public link yet. Create one to let anyone enter a name/email and view the document."}</p>
+            <button class="btn btn-sm btn-dark create-link-btn" data-type="${type}">
+              Create ${isPrivate ? "private" : "public"} link
+            </button>
+          </div>`;
+        body.querySelector(".create-link-btn").addEventListener("click", () => createLink(type));
         return;
       }
-      container.innerHTML = active.map(link => {
-        const label = link.is_public
-          ? `<span class="badge badge-amber" style="font-size:0.62rem;padding:2px 7px;">Public</span>`
-          : "";
-        const exp = link.access_expires_at ? formatDate(link.access_expires_at) : "No expiry";
-        const expVal = link.access_expires_at
-          ? new Date(link.access_expires_at).toISOString().slice(0, 16) : "";
-        return `
-          <div class="link-row">
-            <div class="link-row-left">
-              <span class="link-email">${link.is_public ? "Public access" : escapeHtml(link.allowed_email || "")}</span>
-              ${label}
-              <span class="link-expiry">${exp}</span>
-            </div>
-            <div class="link-actions">
-              <input type="datetime-local" class="expiry-input expiry-setter" data-link-id="${link.id}" value="${expVal}" title="Set expiry" style="width:140px;" />
-              <button class="btn btn-sm copy-link-btn" data-token="${link.token}">Copy</button>
-              <button class="btn btn-sm btn-danger revoke-btn" data-link-id="${link.id}">Revoke</button>
-            </div>
-          </div>`;
-      }).join("");
 
-      container.querySelectorAll(".copy-link-btn").forEach(btn =>
+      const viewUrl  = `${window.location.origin}/view.html?token=${link.token}`;
+      const expVal   = link.access_expires_at ? new Date(link.access_expires_at).toISOString().slice(0,16) : "";
+      const expLabel = link.access_expires_at ? "Expires " + formatDate(link.access_expires_at) : "No expiry";
+
+      const recipRows = recipients.map(r => `
+        <div class="recipient-row">
+          <span>${escapeHtml(r.email)}</span>
+          <button class="btn btn-sm btn-danger remove-recipient-btn" data-id="${r.id}">Remove</button>
+        </div>`).join("");
+
+      const recipHeading = isPrivate
+        ? "Recipients — only these emails can access"
+        : "Shared with (tracking only)";
+      const recipEmpty = isPrivate
+        ? "No recipients yet. Add email addresses below."
+        : "No contacts recorded yet.";
+      const recipPlaceholder = isPrivate ? "Add recipient email…" : "Track a contact email…";
+
+      const verifyChecked = link.require_verification ? "checked" : "";
+
+      body.innerHTML = `
+        <div class="link-url-row">
+          <span class="link-url-text" title="${escapeHtml(viewUrl)}">${escapeHtml(viewUrl)}</span>
+          <button class="btn btn-sm copy-link-btn" data-token="${link.token}">Copy</button>
+        </div>
+        <div style="font-size:0.74rem;font-weight:700;text-transform:uppercase;letter-spacing:.05em;color:var(--ink-soft);margin-bottom:6px;">${recipHeading}</div>
+        <div class="recipient-list" id="recipients-${link.id}">
+          ${recipRows || `<p style="font-size:0.8rem;color:var(--ink-soft);padding:4px 0;">${recipEmpty}</p>`}
+        </div>
+        <div class="add-recipient-row">
+          <input type="email" class="add-recip-input" placeholder="${recipPlaceholder}" />
+          <button class="btn btn-sm btn-dark add-recip-btn">Add</button>
+        </div>
+        <div class="toggle-row" style="margin:12px 0 0;padding:10px 0 0;border-top:1.5px solid var(--line-soft);">
+          <div class="toggle-label-group">
+            <div class="toggle-label" style="font-size:0.85rem;">Require email verification (OTP)</div>
+          </div>
+          <label class="toggle-switch">
+            <input type="checkbox" class="verify-toggle" ${verifyChecked} />
+            <span class="toggle-track"><span class="toggle-thumb"></span></span>
+          </label>
+        </div>
+        <div class="link-footer">
+          <div class="link-expiry-row">
+            <span>${expLabel}</span>
+            <input type="datetime-local" class="expiry-input expiry-setter" value="${expVal}" title="Set expiry" style="width:148px;" />
+          </div>
+          <button class="btn btn-sm btn-danger revoke-link-btn">Revoke link</button>
+        </div>`;
+
+      body.querySelector(".copy-link-btn").addEventListener("click", async (e) => {
+        const btn = e.currentTarget;
+        await copyShareLink(btn.dataset.token);
+        btn.textContent = "Copied!";
+        setTimeout(() => { btn.textContent = "Copy"; }, 1600);
+      });
+
+      body.querySelectorAll(".remove-recipient-btn").forEach(btn =>
         btn.addEventListener("click", async () => {
-          await copyShareLink(btn.dataset.token);
-          btn.textContent = "Copied";
-          setTimeout(() => btn.textContent = "Copy", 1600);
+          await sb.from("link_recipients").delete().eq("id", btn.dataset.id);
+          await selectDoc(currentDocId);
         })
       );
-      container.querySelectorAll(".revoke-btn").forEach(btn =>
-        btn.addEventListener("click", async () => {
-          await sb.from("share_links").update({ is_active: false }).eq("id", btn.dataset.linkId);
-          await selectDoc(selectedDocId);
-        })
-      );
-      container.querySelectorAll(".expiry-setter").forEach(inp =>
-        inp.addEventListener("change", async () => {
-          const val = inp.value ? new Date(inp.value).toISOString() : null;
-          await sb.from("share_links").update({ access_expires_at: val }).eq("id", inp.dataset.linkId);
-          await selectDoc(selectedDocId);
-        })
-      );
+
+      body.querySelector(".add-recip-btn").addEventListener("click", async () => {
+        const inp = body.querySelector(".add-recip-input");
+        const email = inp.value.trim().toLowerCase();
+        if (!email) return;
+        const { error } = await sb.from("link_recipients").insert({ link_id: link.id, email });
+        if (error) { alert("Could not add: " + error.message); return; }
+        inp.value = "";
+        await selectDoc(currentDocId);
+      });
+
+      body.querySelector(".add-recip-input").addEventListener("keydown", (e) => {
+        if (e.key === "Enter") body.querySelector(".add-recip-btn").click();
+      });
+
+      body.querySelector(".verify-toggle").addEventListener("change", async (e) => {
+        await sb.from("share_links")
+          .update({ require_verification: e.currentTarget.checked })
+          .eq("id", link.id);
+        await selectDoc(currentDocId);
+      });
+
+      body.querySelector(".expiry-setter").addEventListener("change", async (e) => {
+        const val = e.currentTarget.value ? new Date(e.currentTarget.value).toISOString() : null;
+        await sb.from("share_links").update({ access_expires_at: val }).eq("id", link.id);
+        await selectDoc(currentDocId);
+      });
+
+      body.querySelector(".revoke-link-btn").addEventListener("click", async () => {
+        if (!confirm("Revoke this link? Viewers will lose access immediately.")) return;
+        await sb.from("share_links").update({ is_active: false }).eq("id", link.id);
+        await selectDoc(currentDocId);
+      });
+    }
+
+    async function createLink(type) {
+      if (!currentDocId) return;
+      const isPrivate = type === "private";
+      const token = crypto.randomUUID().replace(/-/g,"") + crypto.randomUUID().replace(/-/g,"");
+      const { error } = await sb.from("share_links").insert({
+        document_id: currentDocId,
+        token,
+        require_verification: isPrivate,
+        is_public: !isPrivate,
+      });
+      if (error) { alert("Error creating link: " + error.message); return; }
+      await selectDoc(currentDocId);
     }
 
     /* ====================================================================
@@ -730,63 +816,13 @@
       await loadSidebar();
     });
 
-    /* ====================================================================
-       Add share link forms
-    ==================================================================== */
-    const addEmailFormEl = $("#add-email-form");
-    const addPublicFormEl = $("#add-public-form");
-
-    $("#btn-show-add-email").addEventListener("click", () => {
-      addEmailFormEl.classList.toggle("hidden");
-      if (!addEmailFormEl.classList.contains("hidden")) {
-        addPublicFormEl.classList.add("hidden");
-        $("#new-email").focus();
-      }
-    });
-    $("#btn-show-add-public").addEventListener("click", () => {
-      addPublicFormEl.classList.toggle("hidden");
-      if (!addPublicFormEl.classList.contains("hidden")) addEmailFormEl.classList.add("hidden");
-    });
-
-    $("#btn-add-email").addEventListener("click", async () => {
-      if (!selectedDocId) return;
-      const email = $("#new-email").value.trim().toLowerCase();
-      if (!email) return;
-      const expiry = $("#new-email-expiry").value
-        ? new Date($("#new-email-expiry").value).toISOString() : null;
-      const { data: link, error } = await sb.from("share_links")
-        .insert({ document_id: selectedDocId, allowed_email: email, is_public: false, access_expires_at: expiry })
-        .select("token").single();
-      if (error) { setAlert(dAlert(), `Could not create link: ${error.message}`, "error"); return; }
-      await copyShareLink(link.token);
-      setAlert(dAlert(), `Link for ${email} created and copied to clipboard.`, "success");
-      $("#new-email").value = "";
-      $("#new-email-expiry").value = "";
-      addEmailFormEl.classList.add("hidden");
-      await selectDoc(selectedDocId);
-    });
-
-    $("#btn-add-public").addEventListener("click", async () => {
-      if (!selectedDocId) return;
-      const expiry = $("#new-public-expiry").value
-        ? new Date($("#new-public-expiry").value).toISOString() : null;
-      const { data: link, error } = await sb.from("share_links")
-        .insert({ document_id: selectedDocId, is_public: true, allowed_email: null, access_expires_at: expiry })
-        .select("token").single();
-      if (error) { setAlert(dAlert(), `Could not create public link: ${error.message}`, "error"); return; }
-      await copyShareLink(link.token);
-      setAlert(dAlert(), "Public link created and copied to clipboard.", "success");
-      $("#new-public-expiry").value = "";
-      addPublicFormEl.classList.add("hidden");
-      await selectDoc(selectedDocId);
-    });
 
     /* ====================================================================
        Helpers
     ==================================================================== */
     async function copyShareLink(token) {
       const base = (SECUREDOC_CONFIG.SITE_URL || window.location.origin).replace(/\/$/, "");
-      const url = `${base}/view.html?t=${token}`;
+      const url = `${base}/view.html?token=${token}`;
       try { await navigator.clipboard.writeText(url); }
       catch { prompt("Copy this link:", url); }
     }

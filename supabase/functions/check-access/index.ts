@@ -1,6 +1,9 @@
-// check-access — two modes:
-//   1. { token }          → probe: returns is_public + whether link is valid (no email revealed)
-//   2. { token, email }   → verify: checks email match (private links only)
+// check-access — validates a share link token.
+//
+// Mode 1: { token }         — probe: returns require_verification + title.
+// Mode 2: { token, email }  — verify: for private links, checks the email
+//                             against link_recipients; public links always pass.
+//
 // Also enforces access_expires_at if set.
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
 import { corsHeaders, jsonResponse } from "../_shared/cors.ts";
@@ -24,7 +27,9 @@ Deno.serve(async (req) => {
 
     const { data: link } = await admin
       .from("share_links")
-      .select("id, allowed_email, is_active, is_public, access_expires_at, documents ( title )")
+      .select(
+        "id, is_active, require_verification, access_expires_at, documents ( title )",
+      )
       .eq("token", token)
       .single();
 
@@ -32,32 +37,52 @@ Deno.serve(async (req) => {
       return jsonResponse({ allowed: false, reason: "invalid_link" }, 404);
     }
 
-    // Expiry check.
-    if (link.access_expires_at && new Date(link.access_expires_at) < new Date()) {
+    if (
+      link.access_expires_at &&
+      new Date(link.access_expires_at) < new Date()
+    ) {
       return jsonResponse({ allowed: false, reason: "link_expired" });
     }
 
-    const title = (link.documents as { title: string } | null)?.title ?? "Document";
+    const title =
+      (link.documents as { title: string } | null)?.title ?? "Document";
 
-    // Public link — no email required.
-    if (link.is_public) {
-      return jsonResponse({ allowed: true, is_public: true, title });
-    }
-
-    // Probe mode: caller didn't supply an email yet, just checking link type.
+    // Probe mode: caller just wants to know the link type, not checking access.
     if (!email) {
-      return jsonResponse({ allowed: false, is_public: false, reason: "email_required" });
+      return jsonResponse({
+        allowed: !link.require_verification, // public links are immediately allowed
+        require_verification: link.require_verification,
+        title,
+      });
     }
 
-    // Email match check.
-    const match =
-      (link.allowed_email ?? "").trim().toLowerCase() === email.trim().toLowerCase();
-
-    if (!match) {
-      return jsonResponse({ allowed: false, is_public: false, reason: "email_not_authorized" });
+    // Public link — no email check needed.
+    if (!link.require_verification) {
+      return jsonResponse({
+        allowed: true,
+        require_verification: false,
+        title,
+      });
     }
 
-    return jsonResponse({ allowed: true, is_public: false, title });
+    // Private link — email must be in the recipient list.
+    const normalised = email.trim().toLowerCase();
+    const { data: recipient } = await admin
+      .from("link_recipients")
+      .select("id")
+      .eq("link_id", link.id)
+      .eq("email", normalised)
+      .maybeSingle();
+
+    if (!recipient) {
+      return jsonResponse({
+        allowed: false,
+        require_verification: true,
+        reason: "email_not_authorized",
+      });
+    }
+
+    return jsonResponse({ allowed: true, require_verification: true, title });
   } catch (_err) {
     return jsonResponse({ error: "Bad request" }, 400);
   }

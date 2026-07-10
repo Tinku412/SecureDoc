@@ -114,7 +114,8 @@
     pdfjsLib.GlobalWorkerOptions.workerSrc =
       "https://cdn.jsdelivr.net/npm/pdfjs-dist@3.11.174/build/pdf.worker.min.js";
 
-    const shareToken = new URLSearchParams(window.location.search).get("t");
+    const shareToken = new URLSearchParams(window.location.search).get("token")
+      || new URLSearchParams(window.location.search).get("t"); // legacy param
     let viewerEmail = "";
     let viewerJwt = "";
     let sessionId = "";
@@ -154,11 +155,11 @@
 
         docTitle = body.title || "Document";
 
-        if (body.is_public) {
-          // Public link — sign in anonymously and load the document.
+        if (!body.require_verification) {
+          // Public link — collect name/email, no OTP.
           await openAsPublic();
         } else {
-          // Private link — show the email gate.
+          // Private link — email must be in recipient list, then OTP.
           hide($("#gate-loading"));
           show($("#gate-email"));
           $("#email-input").focus();
@@ -227,7 +228,15 @@
         const body = await res.json();
 
         if (body.reason === "link_expired") { showDenied("This link has expired.", "Expired"); return; }
-        if (!body.allowed) { showDenied(); return; }
+        if (!body.allowed) {
+          showDenied(
+            body.reason === "email_not_authorized"
+              ? "Your email address is not on the access list for this document."
+              : "Access denied.",
+            "Access denied"
+          );
+          return;
+        }
 
         docTitle = body.title || docTitle;
 
