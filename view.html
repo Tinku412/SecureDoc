@@ -129,8 +129,16 @@
     }
 
     /* -----------------------------------------------------------------------
-       Phase 0 — probe link type (public vs private) without revealing email
+       Phase 0 — probe link settings without knowing the viewer's email.
+       Four modes based on require_verification × restrict_to_recipients:
+         false × false → open: show name/email form, no checks
+         false × true  → show email gate, check list, load directly (no OTP)
+         true  × false → show email gate, send OTP (anyone)
+         true  × true  → show email gate, check list, then OTP
     ----------------------------------------------------------------------- */
+    let linkRequiresVerification = false;
+    let linkRestrictsToRecipients = false;
+
     async function probeLinkType() {
       try {
         const res = await fetch(`${FUNCTIONS_URL}/check-access`, {
@@ -154,12 +162,19 @@
         }
 
         docTitle = body.title || "Document";
+        linkRequiresVerification  = !!body.require_verification;
+        linkRestrictsToRecipients = !!body.restrict_to_recipients;
 
-        if (!body.require_verification) {
-          // Public link — collect name/email, no OTP.
-          await openAsPublic();
+        if (!linkRequiresVerification && !linkRestrictsToRecipients) {
+          // Mode 1 — open: anyone enters a name/email and views immediately.
+          openAsPublic();
         } else {
-          // Private link — email must be in recipient list, then OTP.
+          // Modes 2, 3, 4 — email gate shown first.
+          if (linkRestrictsToRecipients && !linkRequiresVerification) {
+            // Mode 3: will check list then load directly (no OTP).
+            const p = $("#gate-email").querySelector("p");
+            if (p) p.textContent = "Enter your email to confirm you're on the access list for this document.";
+          }
           hide($("#gate-loading"));
           show($("#gate-email"));
           $("#email-input").focus();
@@ -206,7 +221,10 @@
     });
 
     /* -----------------------------------------------------------------------
-       Private link — email gate
+       Email gate — handles modes 2, 3, 4.
+         Mode 2 (no restrict, verify)  → OTP for anyone
+         Mode 3 (restrict, no verify)  → check list → load directly
+         Mode 4 (restrict, verify)     → check list → OTP
     ----------------------------------------------------------------------- */
     $("#email-form").addEventListener("submit", async (e) => {
       e.preventDefault();
@@ -216,6 +234,8 @@
       viewerEmail = $("#email-input").value.trim().toLowerCase();
 
       try {
+        // For mode 2 (no restriction) we still call check-access for a
+        // consistent response shape, but it will always allow.
         const res = await fetch(`${FUNCTIONS_URL}/check-access`, {
           method: "POST",
           headers: {
@@ -240,19 +260,38 @@
 
         docTitle = body.title || docTitle;
 
-        const { error } = await sb.auth.signInWithOtp({
-          email: viewerEmail,
-          options: { shouldCreateUser: true },
-        });
-        if (error) {
-          setAlert($("#email-alert"), `Could not send code: ${formatAuthError(error, "Failed to send OTP.")}`, "error");
-          return;
+        if (body.require_verification) {
+          // Modes 2 + 4 — send OTP, then proceed to OTP gate.
+          const { error } = await sb.auth.signInWithOtp({
+            email: viewerEmail,
+            options: { shouldCreateUser: true },
+          });
+          if (error) {
+            setAlert($("#email-alert"), `Could not send code: ${formatAuthError(error, "Failed to send OTP.")}`, "error");
+            return;
+          }
+          $("#otp-email-label").textContent = viewerEmail;
+          hide($("#gate-email"));
+          show($("#gate-otp"));
+          $("#otp-input").focus();
+        } else {
+          // Mode 3 — recipient list passed, no OTP needed.
+          // Sign in anonymously for a session, then load the document.
+          const { data: anonData, error: anonError } = await sb.auth.signInAnonymously();
+          if (anonError || !anonData.session) {
+            setAlert(
+              $("#email-alert"),
+              "Could not open document. " +
+              "(Admin: enable Anonymous sign-in in Supabase → Auth → Providers.)",
+              "error"
+            );
+            return;
+          }
+          viewerJwt = anonData.session.access_token;
+          hide($("#gate-email"));
+          show($("#viewer"));
+          await loadDocument(viewerEmail);
         }
-
-        $("#otp-email-label").textContent = viewerEmail;
-        hide($("#gate-email"));
-        show($("#gate-otp"));
-        $("#otp-input").focus();
       } catch (err) {
         setAlert($("#email-alert"), `Something went wrong. ${formatAuthError(err, "Please try again.")}`, "error");
       } finally {

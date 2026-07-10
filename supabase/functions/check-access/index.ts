@@ -1,10 +1,20 @@
 // check-access — validates a share link token.
 //
-// Mode 1: { token }         — probe: returns require_verification + title.
-// Mode 2: { token, email }  — verify: for private links, checks the email
-//                             against link_recipients; public links always pass.
+// Four access modes are determined by two flags on the link:
+//   restrict_to_recipients | require_verification | behaviour
+//   false                  | false               | open (anyone)
+//   false                  | true                | anyone + OTP
+//   true                   | false               | recipients list, no OTP
+//   true                   | true                | recipients list + OTP
 //
-// Also enforces access_expires_at if set.
+// Mode 1 – POST { token }
+//   Probe only. Returns require_verification, restrict_to_recipients, title.
+//   No email is checked.
+//
+// Mode 2 – POST { token, email }
+//   Verify email. For restrict=true links, checks link_recipients.
+//   Returns { allowed, require_verification } so the caller knows whether
+//   to proceed to OTP or load directly.
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
 import { corsHeaders, jsonResponse } from "../_shared/cors.ts";
 
@@ -28,7 +38,7 @@ Deno.serve(async (req) => {
     const { data: link } = await admin
       .from("share_links")
       .select(
-        "id, is_active, require_verification, access_expires_at, documents ( title )",
+        "id, is_active, require_verification, restrict_to_recipients, access_expires_at, documents ( title )",
       )
       .eq("token", token)
       .single();
@@ -47,42 +57,42 @@ Deno.serve(async (req) => {
     const title =
       (link.documents as { title: string } | null)?.title ?? "Document";
 
-    // Probe mode: caller just wants to know the link type, not checking access.
+    // Probe mode — no email provided, just return link settings.
     if (!email) {
       return jsonResponse({
-        allowed: !link.require_verification, // public links are immediately allowed
         require_verification: link.require_verification,
+        restrict_to_recipients: link.restrict_to_recipients,
         title,
+        // Convenience: pre-allow if open access (no email check needed)
+        allowed: !link.require_verification && !link.restrict_to_recipients,
       });
     }
 
-    // Public link — no email check needed.
-    if (!link.require_verification) {
-      return jsonResponse({
-        allowed: true,
-        require_verification: false,
-        title,
-      });
-    }
-
-    // Private link — email must be in the recipient list.
     const normalised = email.trim().toLowerCase();
-    const { data: recipient } = await admin
-      .from("link_recipients")
-      .select("id")
-      .eq("link_id", link.id)
-      .eq("email", normalised)
-      .maybeSingle();
 
-    if (!recipient) {
-      return jsonResponse({
-        allowed: false,
-        require_verification: true,
-        reason: "email_not_authorized",
-      });
+    // Check recipient list if restriction is on.
+    if (link.restrict_to_recipients) {
+      const { data: recipient } = await admin
+        .from("link_recipients")
+        .select("id")
+        .eq("link_id", link.id)
+        .eq("email", normalised)
+        .maybeSingle();
+
+      if (!recipient) {
+        return jsonResponse({
+          allowed: false,
+          reason: "email_not_authorized",
+        });
+      }
     }
 
-    return jsonResponse({ allowed: true, require_verification: true, title });
+    // Email passes — caller proceeds to OTP if require_verification, else loads directly.
+    return jsonResponse({
+      allowed: true,
+      require_verification: link.require_verification,
+      title,
+    });
   } catch (_err) {
     return jsonResponse({ error: "Bad request" }, 400);
   }

@@ -68,7 +68,7 @@
         <p>Upload a PDF or click a document in the sidebar to view analytics and manage sharing.</p>
       </div>
 
-      <!-- Document detail view -->
+      <!-- Document detail -->
       <div class="main-inner hidden" id="doc-detail">
 
         <!-- Doc header -->
@@ -78,18 +78,7 @@
             <h1 id="detail-title">—</h1>
             <div class="doc-header-meta" id="detail-meta"></div>
           </div>
-          <div class="doc-header-actions">
-            <button class="btn btn-sm" id="btn-replace">
-              <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="square"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4M17 8l-5-5-5 5M12 3v12"/></svg>
-              Replace PDF
-            </button>
-            <button class="btn btn-sm btn-danger" id="btn-delete">
-              <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="square"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14a2 2 0 01-2 2H8a2 2 0 01-2-2L5 6"/></svg>
-              Delete
-            </button>
-          </div>
         </div>
-        <input type="file" id="replace-input" accept="application/pdf" class="hidden" />
         <div class="alert hidden" id="doc-alert" style="margin-bottom:18px;"></div>
 
         <!-- Metrics -->
@@ -102,8 +91,6 @@
 
         <!-- Charts row -->
         <div class="charts-row">
-
-          <!-- Chart A: Opens over time -->
           <div class="chart-card">
             <div class="chart-card-head">
               <div class="panel-label">Opens — last 30 days</div>
@@ -114,7 +101,7 @@
             </div>
             <div class="viewer-selector hidden" id="opens-viewer-wrap">
               <select id="opens-viewer-select" class="viewer-select">
-                <option value="">Select a viewer…</option>
+                <option value="">All viewers</option>
               </select>
             </div>
             <div id="opens-chart-area">
@@ -122,7 +109,6 @@
             </div>
           </div>
 
-          <!-- Chart B: Time per page -->
           <div class="chart-card">
             <div class="chart-card-head">
               <div class="panel-label">Time per page</div>
@@ -133,27 +119,85 @@
             </div>
             <div class="viewer-selector hidden" id="pages-viewer-wrap">
               <select id="pages-viewer-select" class="viewer-select">
-                <option value="">Select a viewer…</option>
+                <option value="">All viewers</option>
               </select>
             </div>
             <div id="pages-chart-area">
               <div class="chart-no-data">No page data yet</div>
             </div>
           </div>
-
         </div><!-- /charts-row -->
 
-        <!-- Document settings strip -->
-        <div class="card" style="padding:16px 20px;margin-bottom:18px;">
-          <div style="display:flex;align-items:center;gap:20px;flex-wrap:wrap;">
-            <div class="rename-row" style="border:none;padding:0;flex:1;min-width:220px;">
-              <input type="text" id="rename-input" placeholder="Document name" />
-              <button class="btn btn-sm btn-dark" id="btn-rename">Rename</button>
+        <!-- ====== SETTINGS CARD ====== -->
+        <div class="settings-card">
+          <div class="panel-label" style="margin-bottom:18px;">Link settings</div>
+
+          <!-- Share link -->
+          <div class="settings-section">
+            <div class="settings-section-head">Share link</div>
+            <div class="link-url-row" id="link-url-row">
+              <span class="link-url-text" id="link-url-text" style="color:var(--ink-soft);font-style:italic;">No link yet — generate one below.</span>
+              <button class="btn btn-sm" id="btn-copy-link" style="display:none">Copy</button>
             </div>
-            <div style="display:flex;align-items:center;gap:10px;flex-shrink:0;">
-              <div>
-                <div style="font-weight:600;font-size:0.88rem;">Allow download</div>
-                <div style="font-size:0.74rem;color:var(--ink-soft);">Viewers can save the watermarked PDF</div>
+            <div style="display:flex;gap:8px;margin-top:10px;flex-wrap:wrap;">
+              <button class="btn btn-sm btn-dark" id="btn-new-link">Generate link</button>
+              <button class="btn btn-sm btn-danger" id="btn-revoke-link" style="display:none">Revoke link</button>
+            </div>
+          </div>
+
+          <!-- Document name -->
+          <div class="settings-section">
+            <div class="settings-section-head">Document name</div>
+            <div class="rename-row" style="border:none;padding:0;">
+              <input type="text" id="rename-input" placeholder="Document name" />
+              <button class="btn btn-sm btn-dark" id="btn-rename">Save</button>
+            </div>
+          </div>
+
+          <!-- Access controls -->
+          <div class="settings-section">
+            <div class="settings-section-head">Access controls</div>
+
+            <div class="toggle-row">
+              <div class="toggle-label-group">
+                <div class="toggle-label">Restrict access to recipients</div>
+                <div class="toggle-hint">Only listed email addresses can open this link</div>
+              </div>
+              <label class="toggle-switch">
+                <input type="checkbox" id="toggle-restrict" />
+                <span class="toggle-track"><span class="toggle-thumb"></span></span>
+              </label>
+            </div>
+
+            <div class="toggle-row">
+              <div class="toggle-label-group">
+                <div class="toggle-label">Require email verification (OTP)</div>
+                <div class="toggle-hint">Visitors must verify their email with a one-time code</div>
+              </div>
+              <label class="toggle-switch">
+                <input type="checkbox" id="toggle-verify" />
+                <span class="toggle-track"><span class="toggle-thumb"></span></span>
+              </label>
+            </div>
+
+            <div class="toggle-row">
+              <div class="toggle-label-group">
+                <div class="toggle-label">Time-limited access</div>
+                <div class="toggle-hint" id="expiry-hint">Link stops working after the set date and time</div>
+              </div>
+              <div style="display:flex;align-items:center;gap:10px;">
+                <input type="datetime-local" id="expiry-input" class="expiry-input" style="display:none;" />
+                <label class="toggle-switch">
+                  <input type="checkbox" id="toggle-expiry" />
+                  <span class="toggle-track"><span class="toggle-thumb"></span></span>
+                </label>
+              </div>
+            </div>
+
+            <div class="toggle-row" style="border-bottom:none;">
+              <div class="toggle-label-group">
+                <div class="toggle-label">Allow download</div>
+                <div class="toggle-hint">Viewers can save the watermarked PDF</div>
               </div>
               <label class="toggle-switch">
                 <input type="checkbox" id="download-toggle" checked />
@@ -161,33 +205,37 @@
               </label>
             </div>
           </div>
-        </div>
 
-        <!-- Sharing section -->
-        <div class="sharing-section">
-          <div class="panel-label" style="margin-bottom:12px;">Sharing</div>
-          <div class="links-type-grid">
-            <!-- Private link card -->
-            <div class="link-type-card" id="private-link-card">
-              <div class="link-type-card-head">
-                <div class="panel-label">Private link</div>
-                <div class="link-type-card-desc">Viewers must verify their email to access</div>
-              </div>
-              <div id="private-link-body"></div>
-            </div>
-            <!-- Public link card -->
-            <div class="link-type-card" id="public-link-card">
-              <div class="link-type-card-head">
-                <div class="panel-label">Public link</div>
-                <div class="link-type-card-desc">Anyone with the link can enter a name/email and view</div>
-              </div>
-              <div id="public-link-body"></div>
+          <!-- Recipients -->
+          <div class="settings-section">
+            <div class="settings-section-head">Recipients</div>
+            <div class="settings-section-hint">Emails that can access this link. Required when "Restrict access" is enabled.</div>
+            <div class="recipient-list" id="recipients-list"></div>
+            <div class="add-recipient-row">
+              <input type="email" id="add-recip-input" placeholder="Add email address…" />
+              <button class="btn btn-sm btn-dark" id="btn-add-recip">Add</button>
             </div>
           </div>
-        </div>
+
+          <!-- Document actions -->
+          <div class="settings-section" style="border-bottom:none;">
+            <div class="settings-section-head">Document</div>
+            <div style="display:flex;gap:8px;flex-wrap:wrap;">
+              <button class="btn btn-sm" id="btn-replace">
+                <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="square"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4M17 8l-5-5-5 5M12 3v12"/></svg>
+                Replace PDF
+              </button>
+              <button class="btn btn-sm btn-danger" id="btn-delete">
+                <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="square"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14a2 2 0 01-2 2H8a2 2 0 01-2-2L5 6"/></svg>
+                Delete document
+              </button>
+            </div>
+            <input type="file" id="replace-input" accept="application/pdf" class="hidden" />
+          </div>
+        </div><!-- /settings-card -->
 
         <!-- Sessions table -->
-        <div class="panel-label" style="margin-bottom:10px">Viewer sessions</div>
+        <div class="panel-label" style="margin-bottom:10px;">Viewer sessions</div>
         <div class="table-wrap" id="sessions-table-wrap">
           <table>
             <thead>
@@ -213,39 +261,37 @@
   <script src="js/common.js"></script>
   <script>
     /* ====================================================================
-       Module-level state
+       State
     ==================================================================== */
+    const $ = s => document.querySelector(s);
+    const show = el => el && el.classList.remove("hidden");
+    const hide = el => el && el.classList.add("hidden");
+
     let session = null;
-    let selectedDocId = null;
-    let currentDocId = null;
     let docsCache = [];
-
-    // Chart instances
-    let chartOpens = null;
-    let chartPages = null;
-
-    // Chart filter state
-    let opensLevel = "doc";
-    let pagesLevel = "doc";
-    let opensViewer = "";
-    let pagesViewer = "";
-
-    // Raw analytics data for current document
+    let selectedDocId = null;
+    let currentLink = null;          // active share_link row for selected doc
     let currentSessions = [];
     let currentPageViews = [];
+    let opensLevel = "doc", pagesLevel = "doc";
+    let opensViewer = "", pagesViewer = "";
+    let chartOpens = null, chartPages = null;
 
-    const gAlert = () => $("#global-alert");
-    const dAlert = () => $("#doc-alert");
+    function dAlert() { return $("#doc-alert"); }
+    function gAlert() { return $("#global-alert"); }
 
     /* ====================================================================
-       Boot
+       Init
     ==================================================================== */
     async function init() {
       session = await requireOwnerSession();
       if (!session) return;
-      $("#nav-user").textContent = session.user.email;
-      $("#sidebar-user").textContent = session.user.email;
-      $("#dashboard").style.display = "flex";
+
+      $("#nav-user").textContent = session.user.email ?? "";
+      const name = session.user.user_metadata?.full_name ?? session.user.email?.split("@")[0] ?? "";
+      $("#sidebar-user").textContent = name;
+
+      show($("#dashboard"));
       await loadSidebar();
     }
 
@@ -253,39 +299,34 @@
        Sidebar
     ==================================================================== */
     async function loadSidebar() {
-      const { data: docs, error } = await sb
-        .from("documents")
-        .select("id, title, file_size, created_at, download_allowed, storage_path")
+      const { data, error } = await sb.from("documents")
+        .select("id, title, file_size, created_at, download_allowed")
+        .eq("owner_id", session.user.id)
         .order("created_at", { ascending: false });
 
-      const list = $("#sidebar-list");
-      if (error || !docs || !docs.length) {
-        list.innerHTML = `<div style="padding:12px 18px;font-size:0.82rem;color:var(--ink-soft);">
-          ${error ? "Could not load documents." : "No documents yet."}
-        </div>`;
-        docsCache = [];
-        return;
-      }
-      docsCache = docs;
+      if (error) { setAlert(gAlert(), `Could not load documents: ${error.message}`, "error"); return; }
+      docsCache = data || [];
       renderSidebarList();
 
-      if (selectedDocId && docs.find(d => d.id === selectedDocId)) {
+      if (selectedDocId && docsCache.find(d => d.id === selectedDocId)) {
         await selectDoc(selectedDocId);
+      } else if (docsCache.length && !selectedDocId) {
+        await selectDoc(docsCache[0].id);
       }
     }
 
     function renderSidebarList() {
       const list = $("#sidebar-list");
+      if (!docsCache.length) {
+        list.innerHTML = `<div style="padding:14px 18px;font-size:0.82rem;color:var(--ink-soft)">No documents yet.</div>`;
+        return;
+      }
       list.innerHTML = docsCache.map(d => {
         const active = d.id === selectedDocId ? " active" : "";
-        return `
-          <div class="sidebar-doc${active}" data-id="${d.id}">
-            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="square"><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>
-            <div>
-              <div class="sidebar-doc-name">${escapeHtml(d.title)}</div>
-              <div class="sidebar-doc-meta">${formatBytes(d.file_size)}</div>
-            </div>
-          </div>`;
+        return `<div class="sidebar-doc${active}" data-id="${d.id}" title="${escapeHtml(d.title)}">
+          <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="square"><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>
+          <span>${escapeHtml(d.title)}</span>
+        </div>`;
       }).join("");
       list.querySelectorAll(".sidebar-doc").forEach(el =>
         el.addEventListener("click", () => selectDoc(el.dataset.id))
@@ -293,19 +334,16 @@
     }
 
     /* ====================================================================
-       Select document — load all data and render
+       Select document — fetch everything and render
     ==================================================================== */
     async function selectDoc(docId) {
       selectedDocId = docId;
-      currentDocId = docId;
       opensLevel = "doc"; pagesLevel = "doc";
       opensViewer = ""; pagesViewer = "";
 
       document.querySelectorAll(".sidebar-doc").forEach(el =>
         el.classList.toggle("active", el.dataset.id === docId)
       );
-
-      // Reset chart tab UI
       document.querySelectorAll(".chart-tab[data-chart='opens']").forEach(b =>
         b.classList.toggle("active", b.dataset.level === "doc")
       );
@@ -314,7 +352,6 @@
       );
       hide($("#opens-viewer-wrap"));
       hide($("#pages-viewer-wrap"));
-
       hide($("#empty-state"));
       show($("#doc-detail"));
       clearAlert(dAlert());
@@ -324,25 +361,27 @@
 
       $("#detail-title").textContent = doc.title;
       $("#rename-input").value = doc.title;
-      $("#detail-meta").textContent =
-        `${formatBytes(doc.file_size)} · uploaded ${formatDate(doc.created_at)}`;
-      $("#download-toggle").checked = !!doc.download_allowed;
+      const sizeMb = doc.file_size ? (doc.file_size / 1024 / 1024).toFixed(2) + " MB" : "";
+      $("#detail-meta").textContent = [sizeMb, formatDate(doc.created_at)].filter(Boolean).join("  ·  ");
 
-      // Fetch data
+      // Load sessions, link, recipients in parallel.
       const [{ data: sessions }, { data: links }] = await Promise.all([
         sb.from("view_sessions")
           .select("id, viewer_email, ip_address, opened_at, total_seconds")
           .eq("document_id", docId)
           .order("opened_at", { ascending: false }),
         sb.from("share_links")
-          .select("id, token, require_verification, is_active, access_expires_at, created_at")
+          .select("id, token, require_verification, restrict_to_recipients, is_active, access_expires_at, created_at")
           .eq("document_id", docId)
-          .order("created_at", { ascending: false }),
+          .eq("is_active", true)
+          .order("created_at", { ascending: false })
+          .limit(1),
       ]);
 
       currentSessions = sessions || [];
-      const sessionIds = currentSessions.map(s => s.id);
+      currentLink = links?.[0] || null;
 
+      const sessionIds = currentSessions.map(s => s.id);
       if (sessionIds.length) {
         const { data: pvs } = await sb.from("page_views")
           .select("session_id, page_number, seconds_spent")
@@ -352,38 +391,35 @@
         currentPageViews = [];
       }
 
-      // Fetch recipients for all links.
-      const currentLinks = links || [];
-      const linkIds = currentLinks.map(l => l.id);
-      let allRecipients = [];
-      if (linkIds.length) {
+      let recipients = [];
+      if (currentLink) {
         const { data: recips } = await sb.from("link_recipients")
           .select("id, link_id, email, added_at")
-          .in("link_id", linkIds)
+          .eq("link_id", currentLink.id)
           .order("added_at");
-        allRecipients = recips || [];
+        recipients = recips || [];
       }
 
-      renderMetrics(currentSessions, currentLinks);
+      renderMetrics(currentSessions, currentLink);
       populateViewerDropdowns(currentSessions);
       updateOpensChart();
       updatePagesChart();
-      renderLinkCards(currentLinks, allRecipients);
+      renderSettings(doc, currentLink, recipients);
       renderSessions(currentSessions, currentPageViews);
     }
 
     /* ====================================================================
-       Metrics row
+       Metrics
     ==================================================================== */
-    function renderMetrics(sessions, links) {
+    function renderMetrics(sessions, link) {
       $("#m-opens").textContent = sessions.length;
       $("#m-readers").textContent = new Set(sessions.map(s => s.viewer_email)).size;
       $("#m-time").textContent = formatDuration(sessions.reduce((a, s) => a + (s.total_seconds || 0), 0));
-      $("#m-links").textContent = links.filter(l => l.is_active).length;
+      $("#m-links").textContent = link ? "1" : "0";
     }
 
     /* ====================================================================
-       Viewer dropdowns
+       Viewer dropdowns for charts
     ==================================================================== */
     function populateViewerDropdowns(sessions) {
       const viewers = [...new Set(sessions.map(s => s.viewer_email).filter(Boolean))];
@@ -396,7 +432,7 @@
     }
 
     /* ====================================================================
-       Chart A — Opens over time (line)
+       Chart A — Opens over time
     ==================================================================== */
     function updateOpensChart() {
       const sessions = (opensLevel === "viewer" && opensViewer)
@@ -420,7 +456,6 @@
 
       const area = $("#opens-chart-area");
       area.innerHTML = `<div class="chart-canvas-wrap"><canvas id="opens-chart"></canvas></div>`;
-
       if (chartOpens) { chartOpens.destroy(); chartOpens = null; }
       chartOpens = new Chart(document.getElementById("opens-chart").getContext("2d"), {
         type: "line",
@@ -443,22 +478,15 @@
           maintainAspectRatio: false,
           plugins: { legend: { display: false }, tooltip: { mode: "index", intersect: false } },
           scales: {
-            x: {
-              grid: { display: false },
-              ticks: { maxTicksLimit: 10, font: { family: "'IBM Plex Mono'", size: 9 }, color: "#4b4b57" },
-            },
-            y: {
-              beginAtZero: true,
-              ticks: { stepSize: 1, font: { family: "'IBM Plex Mono'", size: 9 }, color: "#4b4b57" },
-              grid: { color: "#eeece8" },
-            },
+            x: { grid: { display: false }, ticks: { maxTicksLimit: 10, font: { family: "'IBM Plex Mono'", size: 9 }, color: "#4b4b57" } },
+            y: { beginAtZero: true, ticks: { stepSize: 1, font: { family: "'IBM Plex Mono'", size: 9 }, color: "#4b4b57" }, grid: { color: "#eeece8" } },
           },
         },
       });
     }
 
     /* ====================================================================
-       Chart B — Time per page (horizontal bar)
+       Chart B — Time per page
     ==================================================================== */
     function updatePagesChart() {
       const sessions = (pagesLevel === "viewer" && pagesViewer)
@@ -469,9 +497,7 @@
       const totals = {};
       currentPageViews
         .filter(pv => sessionIds.has(pv.session_id))
-        .forEach(pv => {
-          totals[pv.page_number] = (totals[pv.page_number] || 0) + pv.seconds_spent;
-        });
+        .forEach(pv => { totals[pv.page_number] = (totals[pv.page_number] || 0) + pv.seconds_spent; });
 
       const pages = Object.keys(totals).map(Number).sort((a, b) => a - b);
       const area = $("#pages-chart-area");
@@ -484,45 +510,26 @@
 
       area.innerHTML = `<div class="chart-canvas-wrap"><canvas id="pages-chart"></canvas></div>`;
       if (chartPages) { chartPages.destroy(); chartPages = null; }
-
       chartPages = new Chart(document.getElementById("pages-chart").getContext("2d"), {
         type: "bar",
         data: {
           labels: pages.map(p => `Pg ${p}`),
-          datasets: [{
-            label: "Seconds",
-            data: pages.map(p => totals[p]),
-            backgroundColor: "#1f4fd8",
-            borderWidth: 0,
-            barThickness: Math.max(10, Math.min(28, Math.floor(160 / pages.length))),
-          }],
+          datasets: [{ label: "Seconds", data: pages.map(p => totals[p]), backgroundColor: "#1f4fd8", borderWidth: 0, barThickness: Math.max(10, Math.min(28, Math.floor(160 / pages.length))) }],
         },
         options: {
           indexAxis: "y",
           responsive: true,
           maintainAspectRatio: false,
-          plugins: { legend: { display: false }, tooltip: { callbacks: {
-            label: ctx => ` ${formatDuration(ctx.raw)}`
-          }}},
+          plugins: { legend: { display: false }, tooltip: { callbacks: { label: ctx => ` ${formatDuration(ctx.raw)}` } } },
           scales: {
-            x: {
-              beginAtZero: true,
-              ticks: { font: { family: "'IBM Plex Mono'", size: 9 }, color: "#4b4b57",
-                callback: v => formatDuration(v) },
-              grid: { color: "#eeece8" },
-            },
-            y: {
-              ticks: { font: { family: "'IBM Plex Mono'", size: 9 }, color: "#4b4b57" },
-              grid: { display: false },
-            },
+            x: { beginAtZero: true, ticks: { font: { family: "'IBM Plex Mono'", size: 9 }, color: "#4b4b57", callback: v => formatDuration(v) }, grid: { color: "#eeece8" } },
+            y: { ticks: { font: { family: "'IBM Plex Mono'", size: 9 }, color: "#4b4b57" }, grid: { display: false } },
           },
         },
       });
     }
 
-    /* ====================================================================
-       Chart tab toggle handlers
-    ==================================================================== */
+    /* Chart tab toggles */
     document.querySelectorAll(".chart-tab").forEach(btn => {
       btn.addEventListener("click", () => {
         const chart = btn.dataset.chart;
@@ -532,172 +539,214 @@
         );
         if (chart === "opens") {
           opensLevel = level;
-          if (level === "viewer") { show($("#opens-viewer-wrap")); }
-          else { hide($("#opens-viewer-wrap")); opensViewer = ""; }
+          if (level === "viewer") show($("#opens-viewer-wrap")); else { hide($("#opens-viewer-wrap")); opensViewer = ""; }
           updateOpensChart();
         } else {
           pagesLevel = level;
-          if (level === "viewer") { show($("#pages-viewer-wrap")); }
-          else { hide($("#pages-viewer-wrap")); pagesViewer = ""; }
+          if (level === "viewer") show($("#pages-viewer-wrap")); else { hide($("#pages-viewer-wrap")); pagesViewer = ""; }
           updatePagesChart();
         }
       });
     });
+    $("#opens-viewer-select").addEventListener("change", e => { opensViewer = e.target.value; updateOpensChart(); });
+    $("#pages-viewer-select").addEventListener("change", e => { pagesViewer = e.target.value; updatePagesChart(); });
 
-    $("#opens-viewer-select").addEventListener("change", e => {
-      opensViewer = e.target.value;
-      updateOpensChart();
+    /* ====================================================================
+       Settings card rendering
+       Populates the static HTML elements with current link/doc state.
+    ==================================================================== */
+    function renderSettings(doc, link, recipients) {
+      // Link URL row
+      if (link) {
+        const url = buildShareUrl(link.token);
+        const urlEl = $("#link-url-text");
+        urlEl.textContent = url;
+        urlEl.style.fontStyle = "normal";
+        urlEl.style.color = "";
+        $("#btn-copy-link").style.display = "";
+        $("#btn-new-link").textContent = "Regenerate link";
+        $("#btn-revoke-link").style.display = "";
+      } else {
+        $("#link-url-text").textContent = "No link yet — generate one below.";
+        $("#link-url-text").style.fontStyle = "italic";
+        $("#link-url-text").style.color = "var(--ink-soft)";
+        $("#btn-copy-link").style.display = "none";
+        $("#btn-new-link").textContent = "Generate link";
+        $("#btn-revoke-link").style.display = "none";
+      }
+
+      // Toggles
+      $("#toggle-restrict").checked = link?.restrict_to_recipients ?? false;
+      $("#toggle-verify").checked   = link?.require_verification  ?? false;
+
+      const hasExpiry = !!(link?.access_expires_at);
+      $("#toggle-expiry").checked = hasExpiry;
+      const expiryInp = $("#expiry-input");
+      if (hasExpiry) {
+        expiryInp.style.display = "";
+        expiryInp.value = new Date(link.access_expires_at).toISOString().slice(0, 16);
+      } else {
+        expiryInp.style.display = "none";
+        expiryInp.value = "";
+      }
+
+      $("#download-toggle").checked = doc.download_allowed !== false;
+
+      // Recipients list
+      renderRecipientsList(recipients);
+    }
+
+    function renderRecipientsList(recipients) {
+      const list = $("#recipients-list");
+      if (!recipients.length) {
+        list.innerHTML = `<div class="recipient-empty">No recipients added yet.</div>`;
+        return;
+      }
+      list.innerHTML = recipients.map(r => `
+        <div class="recipient-row">
+          <span>${escapeHtml(r.email)}</span>
+          <button class="btn btn-sm btn-danger remove-recip-btn" data-id="${r.id}">Remove</button>
+        </div>`).join("");
+      list.querySelectorAll(".remove-recip-btn").forEach(btn =>
+        btn.addEventListener("click", async () => {
+          await sb.from("link_recipients").delete().eq("id", btn.dataset.id);
+          await selectDoc(selectedDocId);
+        })
+      );
+    }
+
+    /* ====================================================================
+       Link management
+    ==================================================================== */
+    function buildShareUrl(token) {
+      return `${(SECUREDOC_CONFIG.SITE_URL || window.location.origin).replace(/\/$/, "")}/view.html?token=${token}`;
+    }
+
+    async function ensureLink() {
+      if (currentLink) return currentLink;
+      return await createNewLink(selectedDocId);
+    }
+
+    async function createNewLink(docId) {
+      if (!docId) return null;
+      const token = crypto.randomUUID().replace(/-/g,"") + crypto.randomUUID().replace(/-/g,"");
+      const { data, error } = await sb.from("share_links")
+        .insert({ document_id: docId, token, require_verification: false, restrict_to_recipients: false, is_public: true })
+        .select("id, token, require_verification, restrict_to_recipients, is_active, access_expires_at, created_at")
+        .single();
+      if (error) { setAlert(dAlert(), `Could not create link: ${error.message}`, "error"); return null; }
+      currentLink = data;
+      return data;
+    }
+
+    $("#btn-new-link").addEventListener("click", async () => {
+      if (!selectedDocId) return;
+      if (currentLink) {
+        // Regenerate — revoke old, create new.
+        if (!confirm("Regenerate the link? The old link will stop working immediately.")) return;
+        await sb.from("share_links").update({ is_active: false }).eq("id", currentLink.id);
+        currentLink = null;
+      }
+      await createNewLink(selectedDocId);
+      await selectDoc(selectedDocId);
     });
 
-    $("#pages-viewer-select").addEventListener("change", e => {
-      pagesViewer = e.target.value;
-      updatePagesChart();
+    $("#btn-revoke-link").addEventListener("click", async () => {
+      if (!currentLink) return;
+      if (!confirm("Revoke this link? Viewers will lose access immediately.")) return;
+      await sb.from("share_links").update({ is_active: false }).eq("id", currentLink.id);
+      currentLink = null;
+      await selectDoc(selectedDocId);
+    });
+
+    $("#btn-copy-link").addEventListener("click", async () => {
+      if (!currentLink) return;
+      const url = buildShareUrl(currentLink.token);
+      try { await navigator.clipboard.writeText(url); }
+      catch { prompt("Copy this link:", url); return; }
+      const btn = $("#btn-copy-link");
+      btn.textContent = "Copied!";
+      setTimeout(() => { btn.textContent = "Copy"; }, 1600);
     });
 
     /* ====================================================================
-       Share link cards (private + public)
+       Toggle event handlers
     ==================================================================== */
-    function renderLinkCards(links, recipients) {
-      const recipsByLink = {};
-      recipients.forEach(r => { (recipsByLink[r.link_id] ||= []).push(r); });
-
-      const active = links.filter(l => l.is_active);
-      const privateLink = active.find(l =>  l.require_verification) || null;
-      const publicLink  = active.find(l => !l.require_verification) || null;
-
-      renderOneLinkCard("private", privateLink, recipsByLink[privateLink?.id] || []);
-      renderOneLinkCard("public",  publicLink,  recipsByLink[publicLink?.id]  || []);
+    async function saveLinkField(field, value) {
+      const link = await ensureLink();
+      if (!link) return;
+      await sb.from("share_links").update({ [field]: value }).eq("id", link.id);
+      currentLink = { ...currentLink, [field]: value };
     }
 
-    function renderOneLinkCard(type, link, recipients) {
-      const body = $(`#${type}-link-body`);
-      const isPrivate = type === "private";
+    $("#toggle-restrict").addEventListener("change", async e =>
+      saveLinkField("restrict_to_recipients", e.target.checked)
+    );
 
-      if (!link) {
-        body.innerHTML = `
-          <div class="link-empty">
-            <p>${isPrivate
-              ? "No private link yet. Create one to share with specific recipients who must verify their email."
-              : "No public link yet. Create one to let anyone enter a name/email and view the document."}</p>
-            <button class="btn btn-sm btn-dark create-link-btn" data-type="${type}">
-              Create ${isPrivate ? "private" : "public"} link
-            </button>
-          </div>`;
-        body.querySelector(".create-link-btn").addEventListener("click", () => createLink(type));
-        return;
-      }
+    $("#toggle-verify").addEventListener("change", async e =>
+      saveLinkField("require_verification", e.target.checked)
+    );
 
-      const viewUrl  = `${window.location.origin}/view.html?token=${link.token}`;
-      const expVal   = link.access_expires_at ? new Date(link.access_expires_at).toISOString().slice(0,16) : "";
-      const expLabel = link.access_expires_at ? "Expires " + formatDate(link.access_expires_at) : "No expiry";
-
-      const recipRows = recipients.map(r => `
-        <div class="recipient-row">
-          <span>${escapeHtml(r.email)}</span>
-          <button class="btn btn-sm btn-danger remove-recipient-btn" data-id="${r.id}">Remove</button>
-        </div>`).join("");
-
-      const recipHeading = isPrivate
-        ? "Recipients — only these emails can access"
-        : "Shared with (tracking only)";
-      const recipEmpty = isPrivate
-        ? "No recipients yet. Add email addresses below."
-        : "No contacts recorded yet.";
-      const recipPlaceholder = isPrivate ? "Add recipient email…" : "Track a contact email…";
-
-      const verifyChecked = link.require_verification ? "checked" : "";
-
-      body.innerHTML = `
-        <div class="link-url-row">
-          <span class="link-url-text" title="${escapeHtml(viewUrl)}">${escapeHtml(viewUrl)}</span>
-          <button class="btn btn-sm copy-link-btn" data-token="${link.token}">Copy</button>
-        </div>
-        <div style="font-size:0.74rem;font-weight:700;text-transform:uppercase;letter-spacing:.05em;color:var(--ink-soft);margin-bottom:6px;">${recipHeading}</div>
-        <div class="recipient-list" id="recipients-${link.id}">
-          ${recipRows || `<p style="font-size:0.8rem;color:var(--ink-soft);padding:4px 0;">${recipEmpty}</p>`}
-        </div>
-        <div class="add-recipient-row">
-          <input type="email" class="add-recip-input" placeholder="${recipPlaceholder}" />
-          <button class="btn btn-sm btn-dark add-recip-btn">Add</button>
-        </div>
-        <div class="toggle-row" style="margin:12px 0 0;padding:10px 0 0;border-top:1.5px solid var(--line-soft);">
-          <div class="toggle-label-group">
-            <div class="toggle-label" style="font-size:0.85rem;">Require email verification (OTP)</div>
-          </div>
-          <label class="toggle-switch">
-            <input type="checkbox" class="verify-toggle" ${verifyChecked} />
-            <span class="toggle-track"><span class="toggle-thumb"></span></span>
-          </label>
-        </div>
-        <div class="link-footer">
-          <div class="link-expiry-row">
-            <span>${expLabel}</span>
-            <input type="datetime-local" class="expiry-input expiry-setter" value="${expVal}" title="Set expiry" style="width:148px;" />
-          </div>
-          <button class="btn btn-sm btn-danger revoke-link-btn">Revoke link</button>
-        </div>`;
-
-      body.querySelector(".copy-link-btn").addEventListener("click", async (e) => {
-        const btn = e.currentTarget;
-        await copyShareLink(btn.dataset.token);
-        btn.textContent = "Copied!";
-        setTimeout(() => { btn.textContent = "Copy"; }, 1600);
-      });
-
-      body.querySelectorAll(".remove-recipient-btn").forEach(btn =>
-        btn.addEventListener("click", async () => {
-          await sb.from("link_recipients").delete().eq("id", btn.dataset.id);
-          await selectDoc(currentDocId);
-        })
-      );
-
-      body.querySelector(".add-recip-btn").addEventListener("click", async () => {
-        const inp = body.querySelector(".add-recip-input");
-        const email = inp.value.trim().toLowerCase();
-        if (!email) return;
-        const { error } = await sb.from("link_recipients").insert({ link_id: link.id, email });
-        if (error) { alert("Could not add: " + error.message); return; }
+    $("#toggle-expiry").addEventListener("change", async e => {
+      const inp = $("#expiry-input");
+      if (e.target.checked) {
+        inp.style.display = "";
+        inp.focus();
+      } else {
+        inp.style.display = "none";
         inp.value = "";
-        await selectDoc(currentDocId);
-      });
+        await saveLinkField("access_expires_at", null);
+      }
+    });
 
-      body.querySelector(".add-recip-input").addEventListener("keydown", (e) => {
-        if (e.key === "Enter") body.querySelector(".add-recip-btn").click();
-      });
+    $("#expiry-input").addEventListener("change", async e => {
+      if (!e.target.value) return;
+      await saveLinkField("access_expires_at", new Date(e.target.value).toISOString());
+    });
 
-      body.querySelector(".verify-toggle").addEventListener("change", async (e) => {
-        await sb.from("share_links")
-          .update({ require_verification: e.currentTarget.checked })
-          .eq("id", link.id);
-        await selectDoc(currentDocId);
-      });
+    $("#download-toggle").addEventListener("change", async e => {
+      if (!selectedDocId) return;
+      await sb.from("documents").update({ download_allowed: e.target.checked }).eq("id", selectedDocId);
+      docsCache = docsCache.map(d => d.id === selectedDocId ? { ...d, download_allowed: e.target.checked } : d);
+    });
 
-      body.querySelector(".expiry-setter").addEventListener("change", async (e) => {
-        const val = e.currentTarget.value ? new Date(e.currentTarget.value).toISOString() : null;
-        await sb.from("share_links").update({ access_expires_at: val }).eq("id", link.id);
-        await selectDoc(currentDocId);
-      });
-
-      body.querySelector(".revoke-link-btn").addEventListener("click", async () => {
-        if (!confirm("Revoke this link? Viewers will lose access immediately.")) return;
-        await sb.from("share_links").update({ is_active: false }).eq("id", link.id);
-        await selectDoc(currentDocId);
-      });
+    /* ====================================================================
+       Recipient management
+    ==================================================================== */
+    async function addRecipient(email) {
+      const link = await ensureLink();
+      if (!link) return;
+      const { error } = await sb.from("link_recipients").insert({ link_id: link.id, email: email.toLowerCase() });
+      if (error) { setAlert(dAlert(), `Could not add recipient: ${error.message}`, "error"); return; }
+      await selectDoc(selectedDocId);
     }
 
-    async function createLink(type) {
-      if (!currentDocId) return;
-      const isPrivate = type === "private";
-      const token = crypto.randomUUID().replace(/-/g,"") + crypto.randomUUID().replace(/-/g,"");
-      const { error } = await sb.from("share_links").insert({
-        document_id: currentDocId,
-        token,
-        require_verification: isPrivate,
-        is_public: !isPrivate,
-      });
-      if (error) { alert("Error creating link: " + error.message); return; }
-      await selectDoc(currentDocId);
-    }
+    $("#btn-add-recip").addEventListener("click", async () => {
+      const inp = $("#add-recip-input");
+      const email = inp.value.trim();
+      if (!email) return;
+      inp.value = "";
+      await addRecipient(email);
+    });
+
+    $("#add-recip-input").addEventListener("keydown", e => {
+      if (e.key === "Enter") { e.preventDefault(); $("#btn-add-recip").click(); }
+    });
+
+    /* ====================================================================
+       Rename
+    ==================================================================== */
+    $("#btn-rename").addEventListener("click", async () => {
+      if (!selectedDocId) return;
+      const title = $("#rename-input").value.trim();
+      if (!title) return;
+      const { error } = await sb.from("documents").update({ title }).eq("id", selectedDocId);
+      if (error) { setAlert(dAlert(), `Rename failed: ${error.message}`, "error"); return; }
+      docsCache = docsCache.map(d => d.id === selectedDocId ? { ...d, title } : d);
+      renderSidebarList();
+      $("#detail-title").textContent = title;
+      setAlert(dAlert(), "Renamed.", "success");
+    });
 
     /* ====================================================================
        Sessions table
@@ -762,41 +811,37 @@
           .eq("id", replaceDocId);
         if (dbErr) { setAlert(gAlert(), `Could not replace: ${dbErr.message}`, "error"); return; }
         if (old?.storage_path) await sb.storage.from("documents").remove([old.storage_path]);
-        setAlert(gAlert(), "Document replaced. All existing links now serve the new file.", "success");
+        setAlert(gAlert(), "Document replaced. The existing link now serves the new file.", "success");
       } else {
-        const { error: dbErr } = await sb.from("documents").insert({
-          owner_id: session.user.id,
-          title: file.name.replace(/\.pdf$/i, ""),
-          storage_path: newPath,
-          file_size: file.size,
-        });
+        const { data: newDoc, error: dbErr } = await sb.from("documents")
+          .insert({
+            owner_id: session.user.id,
+            title: file.name.replace(/\.pdf$/i, ""),
+            storage_path: newPath,
+            file_size: file.size,
+          })
+          .select("id")
+          .single();
         if (dbErr) { setAlert(gAlert(), `Could not save: ${dbErr.message}`, "error"); return; }
-        setAlert(gAlert(), `"${file.name}" uploaded. Select it in the sidebar to share.`, "success");
+
+        // Auto-create a share link for the new document.
+        const token = crypto.randomUUID().replace(/-/g,"") + crypto.randomUUID().replace(/-/g,"");
+        await sb.from("share_links").insert({
+          document_id: newDoc.id,
+          token,
+          require_verification: false,
+          restrict_to_recipients: false,
+          is_public: true,
+        });
+
+        setAlert(gAlert(), `"${file.name}" uploaded. Click it in the sidebar to manage sharing.`, "success");
       }
       await loadSidebar();
     }
 
     /* ====================================================================
-       Settings actions
+       Document actions (replace + delete)
     ==================================================================== */
-    $("#btn-rename").addEventListener("click", async () => {
-      if (!selectedDocId) return;
-      const title = $("#rename-input").value.trim();
-      if (!title) return;
-      const { error } = await sb.from("documents").update({ title }).eq("id", selectedDocId);
-      if (error) { setAlert(dAlert(), `Rename failed: ${error.message}`, "error"); return; }
-      docsCache = docsCache.map(d => d.id === selectedDocId ? { ...d, title } : d);
-      renderSidebarList();
-      $("#detail-title").textContent = title;
-      setAlert(dAlert(), "Renamed.", "success");
-    });
-
-    $("#download-toggle").addEventListener("change", async e => {
-      if (!selectedDocId) return;
-      await sb.from("documents").update({ download_allowed: e.target.checked }).eq("id", selectedDocId);
-      docsCache = docsCache.map(d => d.id === selectedDocId ? { ...d, download_allowed: e.target.checked } : d);
-    });
-
     $("#btn-replace").addEventListener("click", () => {
       if (!selectedDocId) return;
       const inp = $("#replace-input");
@@ -807,26 +852,19 @@
     $("#btn-delete").addEventListener("click", async () => {
       if (!selectedDocId) return;
       const doc = docsCache.find(d => d.id === selectedDocId);
-      if (!confirm(`Delete "${doc?.title}" and all its links and analytics? This cannot be undone.`)) return;
+      if (!confirm(`Delete "${doc?.title}" and all its analytics? This cannot be undone.`)) return;
       if (doc?.storage_path) await sb.storage.from("documents").remove([doc.storage_path]);
       await sb.from("documents").delete().eq("id", selectedDocId);
       selectedDocId = null;
+      currentLink = null;
       hide($("#doc-detail"));
       show($("#empty-state"));
       await loadSidebar();
     });
 
-
     /* ====================================================================
        Helpers
     ==================================================================== */
-    async function copyShareLink(token) {
-      const base = (SECUREDOC_CONFIG.SITE_URL || window.location.origin).replace(/\/$/, "");
-      const url = `${base}/view.html?token=${token}`;
-      try { await navigator.clipboard.writeText(url); }
-      catch { prompt("Copy this link:", url); }
-    }
-
     $("#signout-btn").addEventListener("click", signOut);
     $("#signout-btn-2").addEventListener("click", signOut);
 

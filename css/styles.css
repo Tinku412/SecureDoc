@@ -988,102 +988,80 @@ body.dashboard-body .site-header { flex-shrink: 0; }
 }
 
 /* -----------------------------------------------------------------------
-   Sharing section — two link-type cards
+   Settings card — unified link & document settings panel
 ----------------------------------------------------------------------- */
-.sharing-section { margin-bottom: 22px; }
-.sharing-section-head {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  margin-bottom: 14px;
-}
-
-.links-type-grid {
-  display: grid;
-  grid-template-columns: 1fr 1fr;
-  gap: 16px;
-}
-
-.link-type-card {
+.settings-card {
   background: var(--white);
   border: var(--border);
-  padding: 20px;
+  padding: 24px 26px;
+  margin-bottom: 28px;
 }
 
-.link-type-card-head {
-  margin-bottom: 14px;
+.settings-section {
+  padding: 18px 0;
+  border-bottom: 1.5px solid var(--line-soft);
 }
-.link-type-card-head .panel-label { margin-bottom: 3px; }
-.link-type-card-desc {
-  font-size: 0.76rem;
+.settings-section:first-of-type { padding-top: 0; }
+
+.settings-section-head {
+  font-size: 0.72rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: .07em;
   color: var(--ink-soft);
+  margin-bottom: 12px;
 }
 
+.settings-section-hint {
+  font-size: 0.8rem;
+  color: var(--ink-soft);
+  margin-bottom: 10px;
+}
+
+/* Link URL bar */
 .link-url-row {
   display: flex;
   align-items: center;
-  gap: 6px;
-  margin-bottom: 12px;
-  padding: 8px 10px;
+  gap: 8px;
+  padding: 9px 12px;
   background: var(--paper);
   border: 1.5px solid var(--line-soft);
 }
 .link-url-text {
   flex: 1;
   font-family: var(--font-mono);
-  font-size: 0.68rem;
-  color: var(--ink-soft);
+  font-size: 0.72rem;
+  color: var(--ink);
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
 }
 
-.recipient-list { display: grid; gap: 5px; margin: 10px 0; }
+/* Recipients */
+.recipient-list { display: grid; gap: 5px; margin-bottom: 10px; }
 .recipient-row {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  padding: 5px 10px;
+  padding: 6px 10px;
   background: var(--paper);
   border: 1px solid var(--line-soft);
-  font-size: 0.82rem;
+  font-size: 0.83rem;
   font-weight: 500;
+}
+.recipient-empty {
+  font-size: 0.82rem;
+  color: var(--ink-soft);
+  padding: 4px 0 8px;
 }
 
 .add-recipient-row {
   display: flex;
   gap: 6px;
-  margin-top: 8px;
 }
-.add-recipient-row input { flex: 1; font-size: 0.85rem; }
-
-.link-footer {
-  margin-top: 14px;
-  padding-top: 12px;
-  border-top: 1.5px solid var(--line-soft);
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: 8px;
-  flex-wrap: wrap;
-}
-.link-expiry-row {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  font-size: 0.8rem;
-  color: var(--ink-soft);
-}
-
-.link-empty {
-  padding: 24px 0;
-  text-align: center;
-  border: 2px dashed var(--line-soft);
-}
-.link-empty p { font-size: 0.82rem; color: var(--ink-soft); margin-bottom: 12px; }
-
-@media (max-width: 900px) {
-  .links-type-grid { grid-template-columns: 1fr; }
+.add-recipient-row input {
+  flex: 1;
+  font-size: 0.85rem;
 }
 
 /* --------------------------------------------------------------------------

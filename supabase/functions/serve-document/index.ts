@@ -1,10 +1,12 @@
-// serve-document — the only path through which viewers receive file bytes.
-// Private links (require_verification=true): viewer must have an OTP-verified
-//   Supabase session whose email is in link_recipients.
-// Public links (require_verification=false): anonymous session + a self-reported
-//   name/email label used for the watermark.
-// Every page is stamped server-side; the original file never leaves storage
-// without a watermark.
+// serve-document — sole path through which viewers receive watermarked bytes.
+//
+// Access modes (require_verification × restrict_to_recipients):
+//
+//  false × false  → anonymous session, public_label used for watermark
+//  false × true   → anonymous session, public_label = claimed email,
+//                   verified against link_recipients
+//  true  × false  → OTP-proven email session, no list check
+//  true  × true   → OTP-proven email session, also checked against list
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
 import {
   degrees,
@@ -44,7 +46,7 @@ Deno.serve(async (req) => {
     const { data: link } = await admin
       .from("share_links")
       .select(
-        "id, is_active, require_verification, access_expires_at, document_id, documents ( id, title, storage_path, download_allowed )",
+        "id, is_active, require_verification, restrict_to_recipients, access_expires_at, document_id, documents ( id, title, storage_path, download_allowed )",
       )
       .eq("token", token)
       .single();
@@ -69,24 +71,34 @@ Deno.serve(async (req) => {
     let sessionEmail: string;
 
     if (link.require_verification) {
-      // Private link: must have an OTP-verified session email in recipient list.
+      // OTP-verified session required.
       if (!viewerEmail) {
         return jsonResponse({ error: "Access denied" }, 403);
       }
-      const { data: recipient } = await admin
-        .from("link_recipients")
-        .select("id")
-        .eq("link_id", link.id)
-        .eq("email", viewerEmail)
-        .maybeSingle();
-      if (!recipient) {
-        return jsonResponse({ error: "Access denied" }, 403);
+      if (link.restrict_to_recipients) {
+        const { data: recip } = await admin
+          .from("link_recipients")
+          .select("id")
+          .eq("link_id", link.id)
+          .eq("email", viewerEmail)
+          .maybeSingle();
+        if (!recip) return jsonResponse({ error: "Access denied" }, 403);
       }
       watermarkText = `${viewerEmail}  ·  ${ip}  ·  ${timestamp}`;
       sessionEmail = viewerEmail;
     } else {
-      // Public link: viewer provided a self-reported name/email label.
+      // Anonymous session — public_label is the self-reported identity.
       const label = (public_label ?? "").trim().slice(0, 80) || ip;
+      if (link.restrict_to_recipients) {
+        // Verify the claimed email is in the recipient list.
+        const { data: recip } = await admin
+          .from("link_recipients")
+          .select("id")
+          .eq("link_id", link.id)
+          .eq("email", label.toLowerCase())
+          .maybeSingle();
+        if (!recip) return jsonResponse({ error: "Access denied" }, 403);
+      }
       watermarkText = `${label}  ·  ${ip}  ·  ${timestamp}`;
       sessionEmail = label;
     }
