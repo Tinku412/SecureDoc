@@ -263,10 +263,6 @@
     /* ====================================================================
        State
     ==================================================================== */
-    const $ = s => document.querySelector(s);
-    const show = el => el && el.classList.remove("hidden");
-    const hide = el => el && el.classList.add("hidden");
-
     let session = null;
     let docsCache = [];
     let selectedDocId = null;
