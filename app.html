@@ -3,10 +3,10 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Documents — SecureDoc</title>
+  <title>Dashboard — SecureDoc</title>
   <link rel="stylesheet" href="css/styles.css" />
 </head>
-<body>
+<body class="dashboard-body">
 
   <header class="site-header">
     <div class="container nav">
@@ -16,76 +16,508 @@
         </span>
         SecureDoc
       </a>
-      <nav class="nav-links">
-        <a href="app.html">Documents</a>
-        <a href="dashboard.html">Analytics</a>
+      <div class="nav-links">
+        <span class="mono" id="nav-user" style="color:var(--ink-soft);font-size:0.8rem;"></span>
         <button class="btn btn-sm" id="signout-btn">Sign out</button>
-      </nav>
+      </div>
     </div>
   </header>
 
-  <main class="container" id="main" style="display:none">
-    <div class="page-head">
-      <h1>Your documents</h1>
-      <p id="user-email" class="mono"></p>
-    </div>
+  <div class="dashboard-layout" id="dashboard" style="display:none">
 
-    <div class="alert hidden" id="app-alert"></div>
+    <!-- ====== SIDEBAR ====== -->
+    <aside class="sidebar">
+      <div class="sidebar-scroll">
+        <div class="sidebar-section-label" style="margin-top:6px">Documents</div>
+        <div id="sidebar-list">
+          <div style="padding:10px 18px;font-size:0.82rem;color:var(--ink-soft)">Loading…</div>
+        </div>
+      </div>
 
-    <div class="grid-2" style="margin-bottom: 36px;">
-      <div class="card">
-        <div class="panel-label">Upload</div>
-        <div class="dropzone" id="dropzone">
-          <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="square"><path d="M12 16V4M6 10l6-6 6 6M4 20h16"/></svg>
-          <p>Drop a PDF here or tap to choose</p>
-          <p class="field-hint">PDF only, up to 50 MB</p>
+      <div class="sidebar-upload">
+        <div class="dropzone-sm" id="dropzone">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="square"><path d="M12 16V4M6 10l6-6 6 6M4 20h16"/></svg>
+          <p>Upload PDF</p>
+          <p class="hint">Drop here or tap · 50 MB max</p>
         </div>
         <input type="file" id="file-input" accept="application/pdf" class="hidden" />
       </div>
-      <div class="card card-flat">
-        <div class="panel-label">How sharing works</div>
-        <p style="font-size:0.92rem; color: var(--ink-soft);">
-          After uploading, add a recipient's email to a document to generate a
-          private link. The link only works for that email — the recipient
-          verifies with a one-time code, and everything they see is watermarked
-          with their email, IP address and the time of viewing.
-        </p>
-      </div>
-    </div>
 
-    <div class="panel-label">Documents</div>
-    <div class="doc-list" id="doc-list">
-      <p class="loading-note">Loading…</p>
-    </div>
-  </main>
+      <div class="sidebar-bottom">
+        <button class="btn btn-sm btn-block" id="signout-btn-2">Sign out</button>
+      </div>
+    </aside>
+
+    <!-- ====== MAIN AREA ====== -->
+    <div class="main-area">
+      <div class="alert hidden global-alert" id="global-alert" style="margin:24px 32px 0;"></div>
+
+      <!-- Empty state -->
+      <div class="empty-state" id="empty-state">
+        <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="square"><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>
+        <h2>No document selected</h2>
+        <p>Upload a PDF using the sidebar, or select an existing document to view its analytics and settings.</p>
+      </div>
+
+      <!-- Document detail view -->
+      <div class="main-inner hidden" id="doc-detail">
+
+        <!-- Doc header -->
+        <div class="doc-header">
+          <div class="doc-title-group">
+            <div class="panel-label">Document</div>
+            <h1 id="detail-title">—</h1>
+            <div class="doc-header-meta" id="detail-meta"></div>
+          </div>
+          <div class="doc-header-actions">
+            <button class="btn btn-sm" id="btn-replace">
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="square"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4M17 8l-5-5-5 5M12 3v12"/></svg>
+              Replace PDF
+            </button>
+            <button class="btn btn-sm btn-danger" id="btn-delete">
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="square"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14a2 2 0 01-2 2H8a2 2 0 01-2-2L5 6M10 11v6M14 11v6M9 6V4h6v2"/></polyline></svg>
+              Delete
+            </button>
+          </div>
+        </div>
+        <input type="file" id="replace-input" accept="application/pdf" class="hidden" />
+        <div class="alert hidden" id="doc-alert" style="margin-bottom:20px;"></div>
+
+        <!-- Metrics -->
+        <div class="metrics-row" id="metrics-row">
+          <div class="metric-cell"><div class="metric-value" id="m-opens">0</div><div class="metric-label">Total opens</div></div>
+          <div class="metric-cell"><div class="metric-value" id="m-readers">0</div><div class="metric-label">Unique readers</div></div>
+          <div class="metric-cell"><div class="metric-value" id="m-time">0s</div><div class="metric-label">Total read time</div></div>
+          <div class="metric-cell"><div class="metric-value" id="m-links">0</div><div class="metric-label">Active links</div></div>
+        </div>
+
+        <!-- Chart -->
+        <div class="chart-card">
+          <div class="panel-label">Opens — last 30 days</div>
+          <div class="chart-canvas-wrap">
+            <canvas id="opens-chart"></canvas>
+          </div>
+        </div>
+
+        <!-- Settings + page analytics -->
+        <div class="detail-grid">
+
+          <!-- Settings card -->
+          <div class="card" style="padding:22px">
+            <div class="panel-label">Settings</div>
+
+            <!-- Rename -->
+            <div class="rename-row" style="border-top:none;padding-top:0;">
+              <input type="text" id="rename-input" placeholder="Document name" style="flex:1;" />
+              <button class="btn btn-sm btn-dark" id="btn-rename">Rename</button>
+            </div>
+
+            <!-- Download toggle -->
+            <div class="toggle-row">
+              <div class="toggle-label-group">
+                <div class="toggle-label">Allow download</div>
+                <div class="toggle-hint">Viewers can save the watermarked PDF</div>
+              </div>
+              <label class="toggle-switch">
+                <input type="checkbox" id="download-toggle" checked />
+                <span class="toggle-track"><span class="toggle-thumb"></span></span>
+              </label>
+            </div>
+          </div>
+
+          <!-- Page analytics -->
+          <div class="card" style="padding:22px">
+            <div class="panel-label">Time per page (all sessions)</div>
+            <div id="page-bars">
+              <p style="font-size:0.85rem;color:var(--ink-soft)">No page data yet.</p>
+            </div>
+          </div>
+
+        </div>
+
+        <!-- Share & access -->
+        <div class="card" style="padding:22px;margin-bottom:22px">
+          <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:16px;flex-wrap:wrap;gap:10px;">
+            <div class="panel-label" style="margin:0">Share links</div>
+            <div style="display:flex;gap:8px;">
+              <button class="btn btn-sm btn-primary" id="btn-show-add-email">Add email recipient</button>
+              <button class="btn btn-sm" id="btn-show-add-public">Public link</button>
+            </div>
+          </div>
+
+          <div id="links-list" class="links-list"></div>
+
+          <!-- Add email recipient form -->
+          <div id="add-email-form" class="hidden" style="padding-top:14px;border-top:1.5px solid var(--line-soft);">
+            <div class="panel-label">New email recipient</div>
+            <div class="add-form" style="margin-top:10px;">
+              <div class="form-group">
+                <label>Email address</label>
+                <input type="email" id="new-email" placeholder="recipient@company.com" />
+              </div>
+              <div class="form-group">
+                <label>Expires (optional)</label>
+                <input type="datetime-local" id="new-email-expiry" class="expiry-input" style="height:44px;" />
+              </div>
+              <button class="btn btn-sm btn-dark" id="btn-add-email" style="align-self:flex-end;height:44px;">Create link</button>
+            </div>
+          </div>
+
+          <!-- Public link form -->
+          <div id="add-public-form" class="hidden" style="padding-top:14px;border-top:1.5px solid var(--line-soft);">
+            <div class="panel-label">New public link</div>
+            <p style="font-size:0.82rem;color:var(--ink-soft);margin:6px 0 12px;">Anyone with this link can view the document — no email verification required. The watermark will show only their IP and timestamp.</p>
+            <div class="add-form public-form" style="margin-top:10px;">
+              <div class="form-group">
+                <label>Expires (optional)</label>
+                <input type="datetime-local" id="new-public-expiry" class="expiry-input" style="height:44px;" />
+              </div>
+              <button class="btn btn-sm btn-dark" id="btn-add-public" style="align-self:flex-end;height:44px;">Create public link</button>
+            </div>
+          </div>
+        </div>
+
+        <!-- Sessions table -->
+        <div class="sessions-section">
+          <div class="panel-label">Viewer sessions</div>
+          <div class="table-wrap" id="sessions-table-wrap">
+            <table>
+              <thead>
+                <tr>
+                  <th>Reader</th>
+                  <th>Opened</th>
+                  <th>IP address</th>
+                  <th>Total time</th>
+                  <th>Pages (time each)</th>
+                </tr>
+              </thead>
+              <tbody id="sessions-tbody"></tbody>
+            </table>
+          </div>
+        </div>
+
+      </div><!-- /doc-detail -->
+    </div><!-- /main-area -->
+  </div><!-- /dashboard-layout -->
 
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/chart.js@4/dist/chart.umd.min.js"></script>
   <script src="js/config.js"></script>
   <script src="js/common.js"></script>
   <script>
-    const alertEl = () => $("#app-alert");
+    /* ================================================================
+       State
+    ================================================================ */
     let session = null;
+    let selectedDocId = null;
+    let chartInstance = null;
+    let docsCache = [];
 
+    const gAlert = () => $("#global-alert");
+    const dAlert = () => $("#doc-alert");
+
+    /* ================================================================
+       Boot
+    ================================================================ */
     async function init() {
       session = await requireOwnerSession();
       if (!session) return;
-      $("#user-email").textContent = session.user.email;
-      $("#main").style.display = "block";
-      await loadDocuments();
+      $("#nav-user").textContent = session.user.email;
+      $("#dashboard").style.display = "flex";
+      await loadSidebar();
     }
 
-    /* ------------------------------ upload ------------------------------ */
+    /* ================================================================
+       Sidebar — document list
+    ================================================================ */
+    async function loadSidebar() {
+      const { data: docs, error } = await sb
+        .from("documents")
+        .select("id, title, file_size, created_at, download_allowed, storage_path")
+        .order("created_at", { ascending: false });
 
+      const list = $("#sidebar-list");
+      if (error || !docs.length) {
+        list.innerHTML = `<div style="padding:10px 18px;font-size:0.82rem;color:var(--ink-soft)">
+          ${error ? "Could not load documents." : "No documents yet. Upload one below."}
+        </div>`;
+        docsCache = [];
+        return;
+      }
+
+      docsCache = docs;
+      list.innerHTML = docs.map(renderSidebarItem).join("");
+      list.querySelectorAll(".sidebar-doc").forEach(el =>
+        el.addEventListener("click", () => selectDoc(el.dataset.id))
+      );
+
+      // Re-select the active doc if one was selected.
+      if (selectedDocId && docs.find(d => d.id === selectedDocId)) {
+        await selectDoc(selectedDocId);
+      }
+    }
+
+    function renderSidebarItem(doc) {
+      const active = doc.id === selectedDocId ? " active" : "";
+      return `
+        <div class="sidebar-doc${active}" data-id="${doc.id}">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="square"><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>
+          <div>
+            <div class="sidebar-doc-name">${escapeHtml(doc.title)}</div>
+            <div class="sidebar-doc-meta">${formatBytes(doc.file_size)}</div>
+          </div>
+        </div>`;
+    }
+
+    /* ================================================================
+       Select a document — load detail panel
+    ================================================================ */
+    async function selectDoc(docId) {
+      selectedDocId = docId;
+
+      // Highlight sidebar item.
+      document.querySelectorAll(".sidebar-doc").forEach(el => {
+        el.classList.toggle("active", el.dataset.id === docId);
+      });
+
+      hide($("#empty-state"));
+      show($("#doc-detail"));
+      clearAlert(dAlert());
+
+      const doc = docsCache.find(d => d.id === docId);
+      if (!doc) return;
+
+      // Populate header.
+      $("#detail-title").textContent = doc.title;
+      $("#rename-input").value = doc.title;
+      $("#detail-meta").textContent =
+        `${formatBytes(doc.file_size)} · uploaded ${formatDate(doc.created_at)}`;
+      $("#download-toggle").checked = !!doc.download_allowed;
+
+      // Fetch analytics data.
+      const [{ data: sessions }, { data: links }] = await Promise.all([
+        sb.from("view_sessions")
+          .select("id, viewer_email, ip_address, opened_at, total_seconds")
+          .eq("document_id", docId)
+          .order("opened_at", { ascending: false }),
+        sb.from("share_links")
+          .select("id, token, allowed_email, is_public, is_active, access_expires_at, created_at")
+          .eq("document_id", docId)
+          .order("created_at", { ascending: false }),
+      ]);
+
+      const sessionIds = (sessions || []).map(s => s.id);
+      let pageViews = [];
+      if (sessionIds.length) {
+        const { data } = await sb.from("page_views")
+          .select("session_id, page_number, seconds_spent")
+          .in("session_id", sessionIds);
+        pageViews = data || [];
+      }
+
+      renderMetrics(sessions || [], links || []);
+      renderChart(sessions || []);
+      renderPageBars(sessions || [], pageViews);
+      renderLinks(links || []);
+      renderSessions(sessions || [], pageViews);
+    }
+
+    /* ================================================================
+       Metrics
+    ================================================================ */
+    function renderMetrics(sessions, links) {
+      const totalTime = sessions.reduce((s, r) => s + (r.total_seconds || 0), 0);
+      const uniqueReaders = new Set(sessions.map(s => s.viewer_email)).size;
+      const activeLinks = links.filter(l => l.is_active).length;
+      $("#m-opens").textContent = sessions.length;
+      $("#m-readers").textContent = uniqueReaders;
+      $("#m-time").textContent = formatDuration(totalTime);
+      $("#m-links").textContent = activeLinks;
+    }
+
+    /* ================================================================
+       Line chart — opens per day, last 30 days
+    ================================================================ */
+    function renderChart(sessions) {
+      const byDate = {};
+      sessions.forEach(s => {
+        const d = (s.opened_at || "").slice(0, 10);
+        if (d) byDate[d] = (byDate[d] || 0) + 1;
+      });
+
+      const labels = [], data = [];
+      for (let i = 29; i >= 0; i--) {
+        const dt = new Date();
+        dt.setDate(dt.getDate() - i);
+        const key = dt.toISOString().slice(0, 10);
+        labels.push(key.slice(5)); // MM-DD
+        data.push(byDate[key] || 0);
+      }
+
+      if (chartInstance) chartInstance.destroy();
+      const ctx = document.getElementById("opens-chart").getContext("2d");
+      chartInstance = new Chart(ctx, {
+        type: "line",
+        data: {
+          labels,
+          datasets: [{
+            label: "Opens",
+            data,
+            borderColor: "#1f4fd8",
+            backgroundColor: "rgba(31,79,216,0.07)",
+            fill: true,
+            tension: 0,
+            pointRadius: 3,
+            pointBackgroundColor: "#1f4fd8",
+            borderWidth: 2,
+          }],
+        },
+        options: {
+          responsive: true,
+          maintainAspectRatio: false,
+          plugins: {
+            legend: { display: false },
+            tooltip: { mode: "index", intersect: false },
+          },
+          scales: {
+            x: {
+              grid: { display: false },
+              ticks: { maxTicksLimit: 10, font: { family: "'IBM Plex Mono'", size: 10 }, color: "#4b4b57" },
+            },
+            y: {
+              beginAtZero: true,
+              ticks: { stepSize: 1, font: { family: "'IBM Plex Mono'", size: 10 }, color: "#4b4b57" },
+              grid: { color: "#d9d7cf" },
+            },
+          },
+        },
+      });
+    }
+
+    /* ================================================================
+       Page analytics bars
+    ================================================================ */
+    function renderPageBars(sessions, pageViews) {
+      const totals = {};
+      const sessionSet = new Set(sessions.map(s => s.id));
+      pageViews
+        .filter(pv => sessionSet.has(pv.session_id))
+        .forEach(pv => {
+          totals[pv.page_number] = (totals[pv.page_number] || 0) + pv.seconds_spent;
+        });
+
+      const pages = Object.keys(totals).map(Number).sort((a, b) => a - b);
+      const container = $("#page-bars");
+      if (!pages.length) {
+        container.innerHTML = `<p style="font-size:0.85rem;color:var(--ink-soft)">No page data yet.</p>`;
+        return;
+      }
+      const max = Math.max(...pages.map(p => totals[p]), 1);
+      container.innerHTML = pages.map(p => `
+        <div class="bar-row">
+          <span class="bar-label">Page ${p}</span>
+          <div class="bar-track"><div class="bar-fill" style="width:${Math.max(2, (totals[p] / max) * 100)}%"></div></div>
+          <span class="bar-value">${formatDuration(totals[p])}</span>
+        </div>`).join("");
+    }
+
+    /* ================================================================
+       Share links list
+    ================================================================ */
+    function renderLinks(links) {
+      const container = $("#links-list");
+      const active = links.filter(l => l.is_active);
+      if (!active.length) {
+        container.innerHTML = `<p style="font-size:0.85rem;color:var(--ink-soft);padding-bottom:8px;">No active links yet.</p>`;
+        return;
+      }
+      container.innerHTML = active.map(link => {
+        const label = link.is_public
+          ? `<span class="badge badge-amber" style="font-size:0.65rem;">Public</span>`
+          : ``;
+        const expLabel = link.access_expires_at
+          ? `Expires ${formatDate(link.access_expires_at)}`
+          : "No expiry";
+        const expValue = link.access_expires_at
+          ? new Date(link.access_expires_at).toISOString().slice(0, 16)
+          : "";
+        return `
+          <div class="link-row" data-link-id="${link.id}">
+            <div class="link-row-left">
+              <span class="link-email">${link.is_public ? "Public access" : escapeHtml(link.allowed_email || "")}</span>
+              ${label}
+              <span class="link-expiry">${expLabel}</span>
+            </div>
+            <div class="link-actions">
+              <input type="datetime-local" class="expiry-input expiry-setter" data-link-id="${link.id}" value="${expValue}" title="Set expiry" />
+              <button class="btn btn-sm copy-link-btn" data-token="${link.token}">Copy</button>
+              <button class="btn btn-sm btn-danger revoke-btn" data-link-id="${link.id}">Revoke</button>
+            </div>
+          </div>`;
+      }).join("");
+
+      container.querySelectorAll(".copy-link-btn").forEach(btn =>
+        btn.addEventListener("click", async () => {
+          await copyLink(btn.dataset.token);
+          btn.textContent = "Copied";
+          setTimeout(() => btn.textContent = "Copy", 1500);
+        })
+      );
+      container.querySelectorAll(".revoke-btn").forEach(btn =>
+        btn.addEventListener("click", async () => {
+          await sb.from("share_links").update({ is_active: false }).eq("id", btn.dataset.linkId);
+          await selectDoc(selectedDocId);
+        })
+      );
+      container.querySelectorAll(".expiry-setter").forEach(input =>
+        input.addEventListener("change", async () => {
+          const val = input.value ? new Date(input.value).toISOString() : null;
+          await sb.from("share_links").update({ access_expires_at: val }).eq("id", input.dataset.linkId);
+          await selectDoc(selectedDocId);
+        })
+      );
+    }
+
+    /* ================================================================
+       Sessions table
+    ================================================================ */
+    function renderSessions(sessions, pageViews) {
+      const bySession = {};
+      pageViews.forEach(pv => {
+        (bySession[pv.session_id] ||= []).push(pv);
+      });
+
+      const tbody = $("#sessions-tbody");
+      if (!sessions.length) {
+        tbody.innerHTML = `<tr><td colspan="5" style="text-align:center;color:var(--ink-soft);padding:20px;">No sessions yet.</td></tr>`;
+        return;
+      }
+      tbody.innerHTML = sessions.map(s => {
+        const pages = (bySession[s.id] || [])
+          .sort((a, b) => a.page_number - b.page_number)
+          .map(pv => `p${pv.page_number}: ${formatDuration(pv.seconds_spent)}`)
+          .join(" · ");
+        return `
+          <tr>
+            <td><strong>${escapeHtml(s.viewer_email)}</strong></td>
+            <td class="mono" style="white-space:nowrap">${formatDate(s.opened_at)}</td>
+            <td class="mono">${escapeHtml(s.ip_address || "—")}</td>
+            <td class="mono">${formatDuration(s.total_seconds)}</td>
+            <td class="mono" style="font-size:0.75rem;max-width:260px;">${pages || "—"}</td>
+          </tr>`;
+      }).join("");
+    }
+
+    /* ================================================================
+       Upload
+    ================================================================ */
     const dropzone = $("#dropzone");
     const fileInput = $("#file-input");
 
     dropzone.addEventListener("click", () => fileInput.click());
-    dropzone.addEventListener("dragover", (e) => {
-      e.preventDefault();
-      dropzone.classList.add("dragover");
-    });
+    dropzone.addEventListener("dragover", e => { e.preventDefault(); dropzone.classList.add("dragover"); });
     dropzone.addEventListener("dragleave", () => dropzone.classList.remove("dragover"));
-    dropzone.addEventListener("drop", (e) => {
+    dropzone.addEventListener("drop", e => {
       e.preventDefault();
       dropzone.classList.remove("dragover");
       if (e.dataTransfer.files.length) uploadFile(e.dataTransfer.files[0]);
@@ -95,148 +527,151 @@
       fileInput.value = "";
     });
 
-    async function uploadFile(file) {
-      clearAlert(alertEl());
-      if (file.type !== "application/pdf") {
-        setAlert(alertEl(), "Only PDF files are supported.", "error");
-        return;
-      }
-      if (file.size > 50 * 1024 * 1024) {
-        setAlert(alertEl(), "File is larger than 50 MB.", "error");
-        return;
-      }
+    async function uploadFile(file, replaceDocId = null) {
+      clearAlert(gAlert());
+      if (file.type !== "application/pdf") { setAlert(gAlert(), "Only PDF files are supported.", "error"); return; }
+      if (file.size > 50 * 1024 * 1024) { setAlert(gAlert(), "File exceeds 50 MB.", "error"); return; }
 
-      setAlert(alertEl(), `Uploading "${file.name}"…`, "info");
-      const path = `${session.user.id}/${crypto.randomUUID()}.pdf`;
+      const label = replaceDocId ? "Replacing document…" : `Uploading "${file.name}"…`;
+      setAlert(gAlert(), label, "info");
 
-      const { error: upErr } = await sb.storage
-        .from("documents")
-        .upload(path, file, { contentType: "application/pdf" });
-      if (upErr) {
-        setAlert(alertEl(), `Upload failed: ${upErr.message}`, "error");
-        return;
-      }
+      const newPath = `${session.user.id}/${crypto.randomUUID()}.pdf`;
+      const { error: upErr } = await sb.storage.from("documents").upload(newPath, file, { contentType: "application/pdf" });
+      if (upErr) { setAlert(gAlert(), `Upload failed: ${upErr.message}`, "error"); return; }
 
-      const { error: dbErr } = await sb.from("documents").insert({
-        owner_id: session.user.id,
-        title: file.name.replace(/\.pdf$/i, ""),
-        storage_path: path,
-        file_size: file.size,
-      });
-      if (dbErr) {
-        setAlert(alertEl(), `Could not save document: ${dbErr.message}`, "error");
-        return;
+      if (replaceDocId) {
+        const oldDoc = docsCache.find(d => d.id === replaceDocId);
+        const { error: dbErr } = await sb.from("documents")
+          .update({ storage_path: newPath, file_size: file.size })
+          .eq("id", replaceDocId);
+        if (dbErr) { setAlert(gAlert(), `Could not replace document: ${dbErr.message}`, "error"); return; }
+        if (oldDoc?.storage_path) await sb.storage.from("documents").remove([oldDoc.storage_path]);
+        setAlert(gAlert(), "Document replaced. All existing links now serve the new file.", "success");
+      } else {
+        const { error: dbErr } = await sb.from("documents").insert({
+          owner_id: session.user.id,
+          title: file.name.replace(/\.pdf$/i, ""),
+          storage_path: newPath,
+          file_size: file.size,
+        });
+        if (dbErr) { setAlert(gAlert(), `Could not save document: ${dbErr.message}`, "error"); return; }
+        setAlert(gAlert(), `"${file.name}" uploaded. Click it in the sidebar to share.`, "success");
       }
 
-      setAlert(alertEl(), `"${file.name}" uploaded. Add a recipient below to share it.`, "success");
-      await loadDocuments();
+      await loadSidebar();
     }
 
-    /* ---------------------------- documents ----------------------------- */
+    /* ================================================================
+       Settings handlers
+    ================================================================ */
 
-    async function loadDocuments() {
-      const { data: docs, error } = await sb
-        .from("documents")
-        .select("id, title, file_size, storage_path, created_at, share_links ( id, token, allowed_email, is_active, created_at )")
-        .order("created_at", { ascending: false });
+    // Rename
+    $("#btn-rename").addEventListener("click", async () => {
+      if (!selectedDocId) return;
+      const title = $("#rename-input").value.trim();
+      if (!title) return;
+      const { error } = await sb.from("documents").update({ title }).eq("id", selectedDocId);
+      if (error) { setAlert(dAlert(), `Rename failed: ${error.message}`, "error"); return; }
+      docsCache = docsCache.map(d => d.id === selectedDocId ? { ...d, title } : d);
+      renderSidebar();
+      $("#detail-title").textContent = title;
+      setAlert(dAlert(), "Document renamed.", "success");
+    });
 
-      const list = $("#doc-list");
-      if (error) {
-        list.innerHTML = `<p class="loading-note">Could not load documents.</p>`;
-        return;
-      }
-      if (!docs.length) {
-        list.innerHTML = `<div class="card card-flat"><p style="color:var(--ink-soft)">No documents yet. Upload a PDF above to get started.</p></div>`;
-        return;
-      }
+    // Download toggle
+    $("#download-toggle").addEventListener("change", async (e) => {
+      if (!selectedDocId) return;
+      const allowed = e.target.checked;
+      await sb.from("documents").update({ download_allowed: allowed }).eq("id", selectedDocId);
+      docsCache = docsCache.map(d => d.id === selectedDocId ? { ...d, download_allowed: allowed } : d);
+    });
 
-      list.innerHTML = docs.map(renderDoc).join("");
-      docs.forEach(attachDocHandlers);
-    }
+    // Replace PDF
+    $("#btn-replace").addEventListener("click", () => {
+      if (!selectedDocId) return;
+      const inp = $("#replace-input");
+      inp.onchange = () => {
+        if (inp.files.length) uploadFile(inp.files[0], selectedDocId);
+        inp.value = "";
+      };
+      inp.click();
+    });
 
-    function renderDoc(doc) {
-      const activeLinks = (doc.share_links || []).filter((l) => l.is_active);
-      const shares = activeLinks.map((link) => `
-        <div class="share-row" data-link-id="${link.id}">
-          <span class="share-email">${escapeHtml(link.allowed_email)}</span>
-          <span class="share-row-actions">
-            <button class="btn btn-sm copy-link-btn" data-token="${link.token}">Copy link</button>
-            <button class="btn btn-sm btn-danger revoke-btn" data-link-id="${link.id}">Revoke</button>
-          </span>
-        </div>`).join("");
+    // Delete
+    $("#btn-delete").addEventListener("click", async () => {
+      if (!selectedDocId) return;
+      const doc = docsCache.find(d => d.id === selectedDocId);
+      if (!confirm(`Delete "${doc?.title}" and all its links and analytics? This cannot be undone.`)) return;
+      if (doc?.storage_path) await sb.storage.from("documents").remove([doc.storage_path]);
+      await sb.from("documents").delete().eq("id", selectedDocId);
+      selectedDocId = null;
+      hide($("#doc-detail"));
+      show($("#empty-state"));
+      await loadSidebar();
+    });
 
-      return `
-        <div class="doc-row" data-doc-id="${doc.id}">
-          <div class="doc-row-head">
-            <div>
-              <h3>${escapeHtml(doc.title)}</h3>
-              <div class="doc-meta">${formatBytes(doc.file_size)} · uploaded ${formatDate(doc.created_at)}</div>
-            </div>
-            <div class="doc-actions">
-              <button class="btn btn-sm btn-primary share-btn">Share with…</button>
-              <button class="btn btn-sm btn-danger delete-btn">Delete</button>
-            </div>
-          </div>
-          <form class="share-form hidden" style="margin-top:16px; display:flex; gap:10px; flex-wrap:wrap;">
-            <input type="email" required placeholder="recipient@company.com" style="flex:1; min-width: 200px;" />
-            <button class="btn btn-sm btn-dark" type="submit">Create link</button>
-          </form>
-          ${activeLinks.length ? `<div class="share-list">${shares}</div>` : ""}
-        </div>`;
-    }
+    // Add email recipient
+    const addEmailFormEl = $("#add-email-form");
+    const addPublicFormEl = $("#add-public-form");
 
-    function attachDocHandlers(doc) {
-      const row = document.querySelector(`.doc-row[data-doc-id="${doc.id}"]`);
+    $("#btn-show-add-email").addEventListener("click", () => {
+      addEmailFormEl.classList.toggle("hidden");
+      if (!addEmailFormEl.classList.contains("hidden")) addPublicFormEl.classList.add("hidden");
+    });
+    $("#btn-show-add-public").addEventListener("click", () => {
+      addPublicFormEl.classList.toggle("hidden");
+      if (!addPublicFormEl.classList.contains("hidden")) addEmailFormEl.classList.add("hidden");
+    });
 
-      row.querySelector(".share-btn").addEventListener("click", () => {
-        const form = row.querySelector(".share-form");
-        form.classList.toggle("hidden");
-        if (!form.classList.contains("hidden")) form.querySelector("input").focus();
-      });
+    $("#btn-add-email").addEventListener("click", async () => {
+      if (!selectedDocId) return;
+      const email = $("#new-email").value.trim().toLowerCase();
+      if (!email) return;
+      const expiry = $("#new-email-expiry").value
+        ? new Date($("#new-email-expiry").value).toISOString()
+        : null;
+      const { data: link, error } = await sb.from("share_links")
+        .insert({ document_id: selectedDocId, allowed_email: email, is_public: false, access_expires_at: expiry })
+        .select("token").single();
+      if (error) { setAlert(dAlert(), `Could not create link: ${error.message}`, "error"); return; }
+      await copyLink(link.token);
+      setAlert(dAlert(), `Link for ${email} created and copied to clipboard.`, "success");
+      $("#new-email").value = "";
+      $("#new-email-expiry").value = "";
+      addEmailFormEl.classList.add("hidden");
+      await selectDoc(selectedDocId);
+    });
 
-      row.querySelector(".share-form").addEventListener("submit", async (e) => {
-        e.preventDefault();
-        const email = e.target.querySelector("input").value.trim().toLowerCase();
-        const { data: link, error } = await sb
-          .from("share_links")
-          .insert({ document_id: doc.id, allowed_email: email })
-          .select("token")
-          .single();
-        if (error) {
-          setAlert(alertEl(), `Could not create link: ${error.message}`, "error");
-          return;
-        }
-        await copyLink(link.token);
-        setAlert(alertEl(), `Link for ${email} created and copied to clipboard.`, "success");
-        await loadDocuments();
-      });
+    $("#btn-add-public").addEventListener("click", async () => {
+      if (!selectedDocId) return;
+      const expiry = $("#new-public-expiry").value
+        ? new Date($("#new-public-expiry").value).toISOString()
+        : null;
+      const { data: link, error } = await sb.from("share_links")
+        .insert({ document_id: selectedDocId, is_public: true, allowed_email: null, access_expires_at: expiry })
+        .select("token").single();
+      if (error) { setAlert(dAlert(), `Could not create public link: ${error.message}`, "error"); return; }
+      await copyLink(link.token);
+      setAlert(dAlert(), "Public link created and copied to clipboard.", "success");
+      $("#new-public-expiry").value = "";
+      addPublicFormEl.classList.add("hidden");
+      await selectDoc(selectedDocId);
+    });
 
-      row.querySelector(".delete-btn").addEventListener("click", async () => {
-        if (!confirm(`Delete "${doc.title}" and all its links and analytics? This cannot be undone.`)) return;
-        await sb.storage.from("documents").remove([doc.storage_path]);
-        await sb.from("documents").delete().eq("id", doc.id);
-        await loadDocuments();
-      });
-
-      row.querySelectorAll(".copy-link-btn").forEach((btn) =>
-        btn.addEventListener("click", async () => {
-          await copyLink(btn.dataset.token);
-          btn.textContent = "Copied";
-          setTimeout(() => (btn.textContent = "Copy link"), 1500);
-        })
-      );
-
-      row.querySelectorAll(".revoke-btn").forEach((btn) =>
-        btn.addEventListener("click", async () => {
-          await sb.from("share_links").update({ is_active: false }).eq("id", btn.dataset.linkId);
-          await loadDocuments();
-        })
+    /* ================================================================
+       Helpers
+    ================================================================ */
+    function renderSidebar() {
+      const list = $("#sidebar-list");
+      list.innerHTML = docsCache.map(renderSidebarItem).join("");
+      list.querySelectorAll(".sidebar-doc").forEach(el =>
+        el.addEventListener("click", () => selectDoc(el.dataset.id))
       );
     }
 
     async function copyLink(token) {
-      const base = window.location.href.replace(/[^/]*$/, "");
-      const url = `${base}view.html?t=${token}`;
+      const base = (SECUREDOC_CONFIG.SITE_URL || window.location.origin).replace(/\/$/, "");
+      const url = `${base}/view.html?t=${token}`;
       try {
         await navigator.clipboard.writeText(url);
       } catch {
@@ -244,7 +679,10 @@
       }
     }
 
-    $("#signout-btn").addEventListener("click", signOut);
+    const signout = signOut;
+    $("#signout-btn").addEventListener("click", signout);
+    $("#signout-btn-2").addEventListener("click", signout);
+
     init();
   </script>
 </body>

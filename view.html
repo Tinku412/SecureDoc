@@ -20,8 +20,17 @@
     </div>
   </header>
 
-  <!-- Step 1: email -->
-  <div class="gate-wrap" id="gate-email">
+  <!-- Loading probe -->
+  <div class="gate-wrap" id="gate-loading">
+    <div class="card gate-card" style="text-align:center;">
+      <div class="panel-label">Secure document</div>
+      <h2>Checking access…</h2>
+      <p style="color:var(--ink-soft)">Please wait a moment.</p>
+    </div>
+  </div>
+
+  <!-- Step 1: email (private links) -->
+  <div class="gate-wrap hidden" id="gate-email">
     <div class="card gate-card">
       <div class="panel-label">Secure document</div>
       <h2>This document is protected</h2>
@@ -54,11 +63,11 @@
     </div>
   </div>
 
-  <!-- Refused -->
+  <!-- Refused / expired -->
   <div class="gate-wrap hidden" id="gate-denied">
     <div class="card gate-card">
       <div class="panel-label">Access denied</div>
-      <h2>You don't have access</h2>
+      <h2 id="denied-heading">You don't have access</h2>
       <p id="denied-message">This document was shared with a different email address. If you believe this is a mistake, contact the person who sent you the link.</p>
     </div>
   </div>
@@ -70,7 +79,7 @@
         <h2 id="doc-title">Document</h2>
         <div class="viewer-meta" id="viewer-meta"></div>
       </div>
-      <button class="btn btn-dark btn-sm" id="download-btn">
+      <button class="btn btn-dark btn-sm hidden" id="download-btn">
         <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="square"><path d="M12 4v12M6 10l6 6 6-6M4 20h16"/></svg>
         Download PDF
       </button>
@@ -95,10 +104,79 @@
     let pdfBlob = null;
     let docTitle = "document";
 
-    if (!shareToken) showDenied("This link is invalid or incomplete.");
+    if (!shareToken) {
+      showDenied("This link is invalid or incomplete.");
+    } else {
+      probeLinkType();
+    }
 
-    /* ------------------------- step 1: email check ------------------------ */
+    /* -----------------------------------------------------------------------
+       Phase 0 — probe link type (public vs private) without revealing email
+    ----------------------------------------------------------------------- */
+    async function probeLinkType() {
+      try {
+        const res = await fetch(`${FUNCTIONS_URL}/check-access`, {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            apikey: SECUREDOC_CONFIG.SUPABASE_ANON_KEY,
+            Authorization: `Bearer ${SECUREDOC_CONFIG.SUPABASE_ANON_KEY}`,
+          },
+          body: JSON.stringify({ token: shareToken }),
+        });
+        const body = await res.json();
 
+        if (res.status === 404 || body.reason === "invalid_link") {
+          showDenied("This link is invalid or has been revoked by the sender.");
+          return;
+        }
+        if (body.reason === "link_expired") {
+          showDenied("This link has expired.", "Expired");
+          return;
+        }
+
+        docTitle = body.title || "Document";
+
+        if (body.is_public) {
+          // Public link — sign in anonymously and load the document.
+          await openAsPublic();
+        } else {
+          // Private link — show the email gate.
+          hide($("#gate-loading"));
+          show($("#gate-email"));
+          $("#email-input").focus();
+        }
+      } catch {
+        showDenied("Could not reach the server. Please refresh and try again.");
+      }
+    }
+
+    /* -----------------------------------------------------------------------
+       Public link path — anonymous sign-in
+    ----------------------------------------------------------------------- */
+    async function openAsPublic() {
+      hide($("#gate-loading"));
+      show($("#viewer"));
+      $("#doc-title").textContent = docTitle;
+      $("#viewer-meta").textContent = "Public document · view is being recorded";
+      $("#pdf-container").innerHTML = `<p class="loading-note">Preparing your document…</p>`;
+
+      const { data: anonData, error: anonError } = await sb.auth.signInAnonymously();
+      if (anonError || !anonData.session) {
+        showDenied(
+          "Anonymous sign-in is not enabled on this project. " +
+          "Enable it in Supabase → Authentication → Providers → Anonymous.",
+          "Configuration error"
+        );
+        return;
+      }
+      viewerJwt = anonData.session.access_token;
+      await loadDocument();
+    }
+
+    /* -----------------------------------------------------------------------
+       Private link — email gate
+    ----------------------------------------------------------------------- */
     $("#email-form").addEventListener("submit", async (e) => {
       e.preventDefault();
       const btn = $("#email-submit");
@@ -118,28 +196,17 @@
         });
         const body = await res.json();
 
-        if (res.status === 404) {
-          showDenied("This link is invalid or has been revoked by the sender.");
-          return;
-        }
-        if (!body.allowed) {
-          showDenied();
-          return;
-        }
+        if (body.reason === "link_expired") { showDenied("This link has expired.", "Expired"); return; }
+        if (!body.allowed) { showDenied(); return; }
 
-        docTitle = body.title || "Document";
+        docTitle = body.title || docTitle;
 
-        // Email is authorized — send the one-time code.
         const { error } = await sb.auth.signInWithOtp({
           email: viewerEmail,
           options: { shouldCreateUser: true },
         });
         if (error) {
-          setAlert(
-            $("#email-alert"),
-            `Could not send code: ${formatAuthError(error, "Failed to send OTP.")}`,
-            "error"
-          );
+          setAlert($("#email-alert"), `Could not send code: ${formatAuthError(error, "Failed to send OTP.")}`, "error");
           return;
         }
 
@@ -148,25 +215,15 @@
         show($("#gate-otp"));
         $("#otp-input").focus();
       } catch (err) {
-        setAlert(
-          $("#email-alert"),
-          `Something went wrong. ${formatAuthError(err, "Please try again.")}`,
-          "error"
-        );
+        setAlert($("#email-alert"), `Something went wrong. ${formatAuthError(err, "Please try again.")}`, "error");
       } finally {
         btn.disabled = false;
       }
     });
 
-    function showDenied(message) {
-      hide($("#gate-email"));
-      hide($("#gate-otp"));
-      if (message) $("#denied-message").textContent = message;
-      show($("#gate-denied"));
-    }
-
-    /* ----------------------- step 2: verify the code ---------------------- */
-
+    /* -----------------------------------------------------------------------
+       OTP verification
+    ----------------------------------------------------------------------- */
     $("#otp-form").addEventListener("submit", async (e) => {
       e.preventDefault();
       const btn = $("#otp-submit");
@@ -180,18 +237,12 @@
         return;
       }
 
-      const { data, error } = await sb.auth.verifyOtp({
-        email: viewerEmail,
-        token: code,
-        type: "email",
-      });
+      const { data, error } = await sb.auth.verifyOtp({ email: viewerEmail, token: code, type: "email" });
 
       if (error || !data.session) {
         setAlert(
           $("#otp-alert"),
-          error
-            ? formatAuthError(error, "Could not verify code.")
-            : "That code is incorrect or has expired. Please check and try again.",
+          error ? formatAuthError(error, "Could not verify code.") : "Incorrect or expired code. Try again.",
           "error"
         );
         btn.disabled = false;
@@ -204,8 +255,9 @@
       await loadDocument();
     });
 
-    /* --------------------- fetch + render watermarked PDF ----------------- */
-
+    /* -----------------------------------------------------------------------
+       Fetch + render watermarked PDF
+    ----------------------------------------------------------------------- */
     async function loadDocument() {
       try {
         const res = await fetch(`${FUNCTIONS_URL}/serve-document`, {
@@ -227,17 +279,32 @@
         sessionId = res.headers.get("x-session-id") || "";
         const headerTitle = res.headers.get("x-doc-title");
         if (headerTitle) docTitle = decodeURIComponent(headerTitle);
+        const downloadAllowed = res.headers.get("x-download-allowed") !== "false";
 
         pdfBlob = await res.blob();
+
         $("#doc-title").textContent = docTitle;
-        $("#viewer-meta").textContent =
-          `Watermarked for ${viewerEmail} · views are recorded`;
+        $("#viewer-meta").textContent = viewerEmail
+          ? `Watermarked for ${viewerEmail} · view is recorded`
+          : `Public view · watermarked with your IP and time`;
+
+        if (downloadAllowed) show($("#download-btn"));
 
         await renderPdf(await pdfBlob.arrayBuffer());
         startTracking();
       } catch {
         showDenied("The document could not be loaded. Please try the link again.");
       }
+    }
+
+    function showDenied(message, heading) {
+      hide($("#gate-loading"));
+      hide($("#gate-email"));
+      hide($("#gate-otp"));
+      hide($("#viewer"));
+      if (heading) $("#denied-heading").textContent = heading;
+      if (message) $("#denied-message").textContent = message;
+      show($("#gate-denied"));
     }
 
     async function renderPdf(buffer) {
@@ -262,8 +329,9 @@
       observePages();
     }
 
-    /* --------------------------- download ------------------------------- */
-
+    /* -----------------------------------------------------------------------
+       Download
+    ----------------------------------------------------------------------- */
     $("#download-btn").addEventListener("click", () => {
       if (!pdfBlob) return;
       const a = document.createElement("a");
@@ -273,9 +341,10 @@
       URL.revokeObjectURL(a.href);
     });
 
-    /* ----------------------- page-by-page tracking ------------------------ */
-
-    const pageSeconds = {};   // page number -> seconds
+    /* -----------------------------------------------------------------------
+       Page-by-page tracking
+    ----------------------------------------------------------------------- */
+    const pageSeconds = {};
     let currentPage = 1;
     let totalSeconds = 0;
     let dirty = false;
@@ -284,19 +353,14 @@
       const visibility = new Map();
       const observer = new IntersectionObserver(
         (entries) => {
-          entries.forEach((e) =>
-            visibility.set(Number(e.target.dataset.page), e.intersectionRatio)
-          );
-          let best = currentPage;
-          let bestRatio = 0;
-          visibility.forEach((ratio, page) => {
-            if (ratio > bestRatio) { bestRatio = ratio; best = page; }
-          });
+          entries.forEach(e => visibility.set(Number(e.target.dataset.page), e.intersectionRatio));
+          let best = currentPage, bestRatio = 0;
+          visibility.forEach((ratio, page) => { if (ratio > bestRatio) { bestRatio = ratio; best = page; } });
           currentPage = best;
         },
         { threshold: [0, 0.25, 0.5, 0.75, 1] }
       );
-      document.querySelectorAll("#pdf-container canvas").forEach((c) => observer.observe(c));
+      document.querySelectorAll("#pdf-container canvas").forEach(c => observer.observe(c));
     }
 
     function startTracking() {
@@ -308,9 +372,7 @@
       }, 1000);
 
       setInterval(flushStats, 10000);
-      document.addEventListener("visibilitychange", () => {
-        if (document.hidden) flushStats();
-      });
+      document.addEventListener("visibilitychange", () => { if (document.hidden) flushStats(); });
       window.addEventListener("pagehide", flushStats);
     }
 
