@@ -584,7 +584,7 @@ body.dashboard-body .site-header { flex-shrink: 0; }
    -------------------------------------------------------------------------- */
 
 .sidebar {
-  width: 272px;
+  width: 280px;
   flex-shrink: 0;
   background: var(--white);
   border-right: var(--border);
@@ -594,16 +594,38 @@ body.dashboard-body .site-header { flex-shrink: 0; }
 }
 
 .sidebar-top {
-  padding: 18px 18px 14px;
+  padding: 16px 18px 12px;
   border-bottom: 1.5px solid var(--line-soft);
+  flex-shrink: 0;
+  background: var(--ink);
+  color: var(--white);
+}
+
+.sidebar-brand {
+  font-family: var(--font-display);
+  font-weight: 700;
+  font-size: 1.05rem;
+  letter-spacing: -0.02em;
+  color: var(--white);
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 6px;
+}
+.sidebar-brand-mark {
+  width: 22px;
+  height: 22px;
+  background: var(--accent);
+  display: flex;
+  align-items: center;
+  justify-content: center;
   flex-shrink: 0;
 }
 
 .sidebar-user {
-  font-size: 0.8rem;
-  color: var(--ink-soft);
+  font-size: 0.73rem;
+  color: rgba(255,255,255,0.55);
   font-family: var(--font-mono);
-  margin-top: 6px;
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
@@ -690,8 +712,7 @@ body.dashboard-body .site-header { flex-shrink: 0; }
 }
 
 .main-inner {
-  padding: 32px 32px 60px;
-  max-width: 960px;
+  padding: 28px 30px 60px;
 }
 
 .empty-state {
@@ -760,22 +781,95 @@ body.dashboard-body .site-header { flex-shrink: 0; }
   margin-top: 6px;
 }
 
-/* Chart */
+/* Charts row — two side-by-side charts */
+.charts-row {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 16px;
+  margin-bottom: 20px;
+}
+
 .chart-card {
   background: var(--white);
   border: var(--border);
-  padding: 20px 22px;
-  margin-bottom: 22px;
+  padding: 18px 20px;
 }
-.chart-card .panel-label { margin-bottom: 14px; }
-.chart-canvas-wrap { position: relative; height: 200px; }
+.chart-card-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 12px;
+  gap: 10px;
+  flex-wrap: wrap;
+}
+.chart-card-head .panel-label { margin: 0; }
+
+/* Doc/Viewer tab toggle on charts */
+.chart-tabs {
+  display: flex;
+  border: 2px solid var(--ink);
+  flex-shrink: 0;
+}
+.chart-tab {
+  padding: 4px 13px;
+  font-family: var(--font-mono);
+  font-size: 0.68rem;
+  font-weight: 500;
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
+  border: none;
+  border-right: 1.5px solid var(--line-soft);
+  background: var(--white);
+  color: var(--ink-soft);
+  cursor: pointer;
+  line-height: 1.6;
+}
+.chart-tab:last-child { border-right: none; }
+.chart-tab.active { background: var(--ink); color: var(--white); }
+.chart-tab:hover:not(.active) { background: var(--paper); }
+
+/* Viewer dropdown */
+.viewer-selector { margin-bottom: 10px; }
+.viewer-select {
+  width: 100%;
+  font-family: var(--font-mono);
+  font-size: 0.8rem;
+  padding: 7px 10px;
+  border: 1.5px solid var(--line-soft);
+  background: var(--white);
+  color: var(--ink);
+  cursor: pointer;
+  appearance: none;
+  -webkit-appearance: none;
+}
+.viewer-select:focus { border-color: var(--accent); outline: none; }
+
+.chart-canvas-wrap { position: relative; height: 190px; }
+.chart-no-data {
+  height: 190px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-family: var(--font-mono);
+  font-size: 0.78rem;
+  color: var(--line-soft);
+  border: 1.5px dashed var(--line-soft);
+}
+
+/* Settings — single card, no grid needed */
+.settings-card {
+  background: var(--white);
+  border: var(--border);
+  padding: 18px 20px;
+  margin-bottom: 20px;
+}
 
 /* Two-column settings + page analytics */
 .detail-grid {
   display: grid;
   grid-template-columns: 1fr 1fr;
   gap: 16px;
-  margin-bottom: 22px;
+  margin-bottom: 20px;
 }
 
 /* Toggle switch */
@@ -907,10 +1001,11 @@ body.dashboard-body .site-header { flex-shrink: 0; }
     overflow: visible;
     max-height: none;
   }
-  .sidebar-scroll { overflow: visible; max-height: 280px; overflow-y: auto; }
+  .sidebar-scroll { overflow: visible; max-height: 260px; overflow-y: auto; }
   .main-area { overflow: visible; }
-  .main-inner { padding: 20px 16px 40px; }
+  .main-inner { padding: 18px 14px 40px; }
   .metrics-row { grid-template-columns: repeat(2, 1fr); }
+  .charts-row { grid-template-columns: 1fr; }
   .detail-grid { grid-template-columns: 1fr; }
   .add-form { grid-template-columns: 1fr; }
   .add-form.public-form { grid-template-columns: 1fr; }

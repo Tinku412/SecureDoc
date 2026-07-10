@@ -17,7 +17,7 @@ Deno.serve(async (req) => {
   }
 
   try {
-    const { token } = await req.json();
+    const { token, public_label } = await req.json();
     if (!token) return jsonResponse({ error: "Missing token" }, 400);
 
     const jwt = (req.headers.get("Authorization") ?? "").replace("Bearer ", "");
@@ -63,9 +63,10 @@ Deno.serve(async (req) => {
     let sessionEmail: string;
 
     if (link.is_public) {
-      // Public link — any authenticated (including anonymous) user may view.
-      watermarkText = `${ip}  ·  ${timestamp}`;
-      sessionEmail = `public:${ip}`;
+      // Public link — viewer provided their name/email (unverified) for the watermark.
+      const label = (public_label ?? "").trim().slice(0, 80) || ip;
+      watermarkText = `${label}  ·  ${ip}  ·  ${timestamp}`;
+      sessionEmail = label;
     } else {
       // Private link — must be accessed with the matching verified email.
       if (!viewerEmail) {

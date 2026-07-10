@@ -135,16 +135,26 @@
   <script src="js/config.js"></script>
   <script src="js/common.js"></script>
   <script>
-    async function start() {
-      try {
-        await signInWithGoogle("app.html");
-      } catch (err) {
-        alert("Sign-in failed: " + (err.message || err));
-      }
+    // If this page was the OAuth redirect target, pick up the session and
+    // forward the user to the app — but only in this case, not on every visit.
+    const isOAuthCallback =
+      window.location.hash.includes("access_token") ||
+      window.location.search.includes("code=");
+
+    if (isOAuthCallback) {
+      waitForSession().then((session) => {
+        if (session) window.location.href = "app.html";
+      });
+    } else {
+      // Normal landing page visit — just update the button if already signed in.
+      sb.auth.getSession().then(({ data }) => {
+        if (data.session) {
+          const btn = $("#signin-btn");
+          btn.textContent = "Open App";
+          btn.onclick = () => { window.location.href = "app.html"; };
+        }
+      });
     }
-    $("#signin-btn").addEventListener("click", start);
-    $("#hero-cta").addEventListener("click", start);
-    $("#band-cta").addEventListener("click", start);
 
     // Surface any OAuth error that bounced back to this page.
     const authError = consumeAuthErrorFromUrl();
@@ -156,12 +166,29 @@
       );
     }
 
-    // If already signed in (returning visit), skip straight to the app.
-    waitForSession().then((session) => {
-      if (session) {
+    async function start() {
+      const { data } = await sb.auth.getSession();
+      if (data.session) {
         window.location.href = "app.html";
+        return;
       }
-    });
+      try {
+        await signInWithGoogle("app.html");
+      } catch (err) {
+        alert("Sign-in failed: " + (err.message || err));
+      }
+    }
+    // CTAs that should trigger sign-in or go to app if already in.
+    $("#hero-cta").addEventListener("click", start);
+    $("#band-cta").addEventListener("click", start);
+    // signin-btn handler is set above conditionally, default below for non-signed-in state.
+    if (!isOAuthCallback) {
+      sb.auth.getSession().then(({ data }) => {
+        if (!data.session) {
+          $("#signin-btn").addEventListener("click", start);
+        }
+      });
+    }
   </script>
 </body>
 </html>

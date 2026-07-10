@@ -17,7 +17,7 @@
         SecureDoc
       </a>
       <div class="nav-links">
-        <span class="mono" id="nav-user" style="color:var(--ink-soft);font-size:0.8rem;"></span>
+        <span class="mono" id="nav-user" style="color:var(--ink-soft);font-size:0.78rem;"></span>
         <button class="btn btn-sm" id="signout-btn">Sign out</button>
       </div>
     </div>
@@ -27,36 +27,45 @@
 
     <!-- ====== SIDEBAR ====== -->
     <aside class="sidebar">
+      <div class="sidebar-top">
+        <div class="sidebar-brand">
+          <span class="sidebar-brand-mark">
+            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2.5" stroke-linecap="square"><path d="M12 3l8 4v5c0 5-3.5 8-8 9-4.5-1-8-4-8-9V7l8-4z"/></svg>
+          </span>
+          Documents
+        </div>
+        <div class="sidebar-user" id="sidebar-user"></div>
+      </div>
+
       <div class="sidebar-scroll">
-        <div class="sidebar-section-label" style="margin-top:6px">Documents</div>
         <div id="sidebar-list">
-          <div style="padding:10px 18px;font-size:0.82rem;color:var(--ink-soft)">Loading…</div>
+          <div style="padding:14px 18px;font-size:0.82rem;color:var(--ink-soft)">Loading…</div>
         </div>
       </div>
 
       <div class="sidebar-upload">
         <div class="dropzone-sm" id="dropzone">
-          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="square"><path d="M12 16V4M6 10l6-6 6 6M4 20h16"/></svg>
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="square"><path d="M12 16V4M6 10l6-6 6 6M4 20h16"/></svg>
           <p>Upload PDF</p>
-          <p class="hint">Drop here or tap · 50 MB max</p>
+          <p class="hint">Drop or tap · max 50 MB</p>
         </div>
         <input type="file" id="file-input" accept="application/pdf" class="hidden" />
       </div>
 
       <div class="sidebar-bottom">
-        <button class="btn btn-sm btn-block" id="signout-btn-2">Sign out</button>
+        <button class="btn btn-sm btn-block" id="signout-btn-2" style="border-color:var(--line-soft);color:var(--ink-soft);">Sign out</button>
       </div>
     </aside>
 
     <!-- ====== MAIN AREA ====== -->
     <div class="main-area">
-      <div class="alert hidden global-alert" id="global-alert" style="margin:24px 32px 0;"></div>
+      <div class="alert hidden" id="global-alert" style="margin:20px 30px 0;"></div>
 
       <!-- Empty state -->
       <div class="empty-state" id="empty-state">
-        <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="square"><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>
-        <h2>No document selected</h2>
-        <p>Upload a PDF using the sidebar, or select an existing document to view its analytics and settings.</p>
+        <svg width="44" height="44" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="square"><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>
+        <h2>Select a document</h2>
+        <p>Upload a PDF or click a document in the sidebar to view analytics and manage sharing.</p>
       </div>
 
       <!-- Document detail view -->
@@ -71,48 +80,81 @@
           </div>
           <div class="doc-header-actions">
             <button class="btn btn-sm" id="btn-replace">
-              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="square"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4M17 8l-5-5-5 5M12 3v12"/></svg>
+              <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="square"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4M17 8l-5-5-5 5M12 3v12"/></svg>
               Replace PDF
             </button>
             <button class="btn btn-sm btn-danger" id="btn-delete">
-              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="square"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14a2 2 0 01-2 2H8a2 2 0 01-2-2L5 6M10 11v6M14 11v6M9 6V4h6v2"/></polyline></svg>
+              <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="square"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14a2 2 0 01-2 2H8a2 2 0 01-2-2L5 6"/></svg>
               Delete
             </button>
           </div>
         </div>
         <input type="file" id="replace-input" accept="application/pdf" class="hidden" />
-        <div class="alert hidden" id="doc-alert" style="margin-bottom:20px;"></div>
+        <div class="alert hidden" id="doc-alert" style="margin-bottom:18px;"></div>
 
         <!-- Metrics -->
-        <div class="metrics-row" id="metrics-row">
+        <div class="metrics-row">
           <div class="metric-cell"><div class="metric-value" id="m-opens">0</div><div class="metric-label">Total opens</div></div>
           <div class="metric-cell"><div class="metric-value" id="m-readers">0</div><div class="metric-label">Unique readers</div></div>
           <div class="metric-cell"><div class="metric-value" id="m-time">0s</div><div class="metric-label">Total read time</div></div>
           <div class="metric-cell"><div class="metric-value" id="m-links">0</div><div class="metric-label">Active links</div></div>
         </div>
 
-        <!-- Chart -->
-        <div class="chart-card">
-          <div class="panel-label">Opens — last 30 days</div>
-          <div class="chart-canvas-wrap">
-            <canvas id="opens-chart"></canvas>
-          </div>
-        </div>
+        <!-- Charts row -->
+        <div class="charts-row">
 
-        <!-- Settings + page analytics -->
+          <!-- Chart A: Opens over time -->
+          <div class="chart-card">
+            <div class="chart-card-head">
+              <div class="panel-label">Opens — last 30 days</div>
+              <div class="chart-tabs">
+                <button class="chart-tab active" data-chart="opens" data-level="doc">Document</button>
+                <button class="chart-tab" data-chart="opens" data-level="viewer">Viewer</button>
+              </div>
+            </div>
+            <div class="viewer-selector hidden" id="opens-viewer-wrap">
+              <select id="opens-viewer-select" class="viewer-select">
+                <option value="">Select a viewer…</option>
+              </select>
+            </div>
+            <div id="opens-chart-area">
+              <div class="chart-canvas-wrap"><canvas id="opens-chart"></canvas></div>
+            </div>
+          </div>
+
+          <!-- Chart B: Time per page -->
+          <div class="chart-card">
+            <div class="chart-card-head">
+              <div class="panel-label">Time per page</div>
+              <div class="chart-tabs">
+                <button class="chart-tab active" data-chart="pages" data-level="doc">Document</button>
+                <button class="chart-tab" data-chart="pages" data-level="viewer">Viewer</button>
+              </div>
+            </div>
+            <div class="viewer-selector hidden" id="pages-viewer-wrap">
+              <select id="pages-viewer-select" class="viewer-select">
+                <option value="">Select a viewer…</option>
+              </select>
+            </div>
+            <div id="pages-chart-area">
+              <div class="chart-no-data">No page data yet</div>
+            </div>
+          </div>
+
+        </div><!-- /charts-row -->
+
+        <!-- Settings + share links -->
         <div class="detail-grid">
 
           <!-- Settings card -->
-          <div class="card" style="padding:22px">
-            <div class="panel-label">Settings</div>
+          <div class="card" style="padding:20px">
+            <div class="panel-label">Document settings</div>
 
-            <!-- Rename -->
-            <div class="rename-row" style="border-top:none;padding-top:0;">
-              <input type="text" id="rename-input" placeholder="Document name" style="flex:1;" />
+            <div class="rename-row" style="border-top:none;padding-top:2px;">
+              <input type="text" id="rename-input" placeholder="Document name" />
               <button class="btn btn-sm btn-dark" id="btn-rename">Rename</button>
             </div>
 
-            <!-- Download toggle -->
             <div class="toggle-row">
               <div class="toggle-label-group">
                 <div class="toggle-label">Allow download</div>
@@ -125,75 +167,59 @@
             </div>
           </div>
 
-          <!-- Page analytics -->
-          <div class="card" style="padding:22px">
-            <div class="panel-label">Time per page (all sessions)</div>
-            <div id="page-bars">
-              <p style="font-size:0.85rem;color:var(--ink-soft)">No page data yet.</p>
+          <!-- Share links card -->
+          <div class="card" style="padding:20px">
+            <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:14px;gap:10px;flex-wrap:wrap;">
+              <div class="panel-label" style="margin:0">Share links</div>
+              <div style="display:flex;gap:7px;flex-wrap:wrap;">
+                <button class="btn btn-sm btn-primary" id="btn-show-add-email">Add recipient</button>
+                <button class="btn btn-sm" id="btn-show-add-public">Public link</button>
+              </div>
             </div>
-          </div>
 
-        </div>
+            <div id="links-list" class="links-list"></div>
 
-        <!-- Share & access -->
-        <div class="card" style="padding:22px;margin-bottom:22px">
-          <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:16px;flex-wrap:wrap;gap:10px;">
-            <div class="panel-label" style="margin:0">Share links</div>
-            <div style="display:flex;gap:8px;">
-              <button class="btn btn-sm btn-primary" id="btn-show-add-email">Add email recipient</button>
-              <button class="btn btn-sm" id="btn-show-add-public">Public link</button>
-            </div>
-          </div>
-
-          <div id="links-list" class="links-list"></div>
-
-          <!-- Add email recipient form -->
-          <div id="add-email-form" class="hidden" style="padding-top:14px;border-top:1.5px solid var(--line-soft);">
-            <div class="panel-label">New email recipient</div>
-            <div class="add-form" style="margin-top:10px;">
-              <div class="form-group">
-                <label>Email address</label>
+            <!-- Add email recipient -->
+            <div id="add-email-form" class="hidden" style="padding-top:12px;border-top:1.5px solid var(--line-soft);">
+              <div class="panel-label">New email recipient</div>
+              <div style="display:grid;grid-template-columns:1fr auto;gap:8px;margin-top:8px;">
                 <input type="email" id="new-email" placeholder="recipient@company.com" />
+                <button class="btn btn-sm btn-dark" id="btn-add-email">Add</button>
               </div>
-              <div class="form-group">
-                <label>Expires (optional)</label>
-                <input type="datetime-local" id="new-email-expiry" class="expiry-input" style="height:44px;" />
+              <div style="margin-top:8px;">
+                <label style="font-size:0.78rem;font-weight:600;">Expires (optional)</label>
+                <input type="datetime-local" id="new-email-expiry" class="expiry-input" style="width:100%;margin-top:4px;" />
               </div>
-              <button class="btn btn-sm btn-dark" id="btn-add-email" style="align-self:flex-end;height:44px;">Create link</button>
+            </div>
+
+            <!-- Public link -->
+            <div id="add-public-form" class="hidden" style="padding-top:12px;border-top:1.5px solid var(--line-soft);">
+              <div class="panel-label">New public link</div>
+              <p style="font-size:0.78rem;color:var(--ink-soft);margin:5px 0 10px;">Anyone with this link can enter their name/email (unverified) and view the document.</p>
+              <div style="display:grid;grid-template-columns:1fr auto;gap:8px;">
+                <input type="datetime-local" id="new-public-expiry" class="expiry-input" placeholder="Expiry (optional)" />
+                <button class="btn btn-sm btn-dark" id="btn-add-public">Create</button>
+              </div>
             </div>
           </div>
 
-          <!-- Public link form -->
-          <div id="add-public-form" class="hidden" style="padding-top:14px;border-top:1.5px solid var(--line-soft);">
-            <div class="panel-label">New public link</div>
-            <p style="font-size:0.82rem;color:var(--ink-soft);margin:6px 0 12px;">Anyone with this link can view the document — no email verification required. The watermark will show only their IP and timestamp.</p>
-            <div class="add-form public-form" style="margin-top:10px;">
-              <div class="form-group">
-                <label>Expires (optional)</label>
-                <input type="datetime-local" id="new-public-expiry" class="expiry-input" style="height:44px;" />
-              </div>
-              <button class="btn btn-sm btn-dark" id="btn-add-public" style="align-self:flex-end;height:44px;">Create public link</button>
-            </div>
-          </div>
-        </div>
+        </div><!-- /detail-grid -->
 
         <!-- Sessions table -->
-        <div class="sessions-section">
-          <div class="panel-label">Viewer sessions</div>
-          <div class="table-wrap" id="sessions-table-wrap">
-            <table>
-              <thead>
-                <tr>
-                  <th>Reader</th>
-                  <th>Opened</th>
-                  <th>IP address</th>
-                  <th>Total time</th>
-                  <th>Pages (time each)</th>
-                </tr>
-              </thead>
-              <tbody id="sessions-tbody"></tbody>
-            </table>
-          </div>
+        <div class="panel-label" style="margin-bottom:10px">Viewer sessions</div>
+        <div class="table-wrap" id="sessions-table-wrap">
+          <table>
+            <thead>
+              <tr>
+                <th>Reader</th>
+                <th>Opened</th>
+                <th>IP address</th>
+                <th>Total time</th>
+                <th>Per page</th>
+              </tr>
+            </thead>
+            <tbody id="sessions-tbody"></tbody>
+          </table>
         </div>
 
       </div><!-- /doc-detail -->
@@ -205,31 +231,45 @@
   <script src="js/config.js"></script>
   <script src="js/common.js"></script>
   <script>
-    /* ================================================================
-       State
-    ================================================================ */
+    /* ====================================================================
+       Module-level state
+    ==================================================================== */
     let session = null;
     let selectedDocId = null;
-    let chartInstance = null;
     let docsCache = [];
+
+    // Chart instances
+    let chartOpens = null;
+    let chartPages = null;
+
+    // Chart filter state
+    let opensLevel = "doc";
+    let pagesLevel = "doc";
+    let opensViewer = "";
+    let pagesViewer = "";
+
+    // Raw analytics data for current document
+    let currentSessions = [];
+    let currentPageViews = [];
 
     const gAlert = () => $("#global-alert");
     const dAlert = () => $("#doc-alert");
 
-    /* ================================================================
+    /* ====================================================================
        Boot
-    ================================================================ */
+    ==================================================================== */
     async function init() {
       session = await requireOwnerSession();
       if (!session) return;
       $("#nav-user").textContent = session.user.email;
+      $("#sidebar-user").textContent = session.user.email;
       $("#dashboard").style.display = "flex";
       await loadSidebar();
     }
 
-    /* ================================================================
-       Sidebar — document list
-    ================================================================ */
+    /* ====================================================================
+       Sidebar
+    ==================================================================== */
     async function loadSidebar() {
       const { data: docs, error } = await sb
         .from("documents")
@@ -237,48 +277,60 @@
         .order("created_at", { ascending: false });
 
       const list = $("#sidebar-list");
-      if (error || !docs.length) {
-        list.innerHTML = `<div style="padding:10px 18px;font-size:0.82rem;color:var(--ink-soft)">
-          ${error ? "Could not load documents." : "No documents yet. Upload one below."}
+      if (error || !docs || !docs.length) {
+        list.innerHTML = `<div style="padding:12px 18px;font-size:0.82rem;color:var(--ink-soft);">
+          ${error ? "Could not load documents." : "No documents yet."}
         </div>`;
         docsCache = [];
         return;
       }
-
       docsCache = docs;
-      list.innerHTML = docs.map(renderSidebarItem).join("");
-      list.querySelectorAll(".sidebar-doc").forEach(el =>
-        el.addEventListener("click", () => selectDoc(el.dataset.id))
-      );
+      renderSidebarList();
 
-      // Re-select the active doc if one was selected.
       if (selectedDocId && docs.find(d => d.id === selectedDocId)) {
         await selectDoc(selectedDocId);
       }
     }
 
-    function renderSidebarItem(doc) {
-      const active = doc.id === selectedDocId ? " active" : "";
-      return `
-        <div class="sidebar-doc${active}" data-id="${doc.id}">
-          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="square"><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>
-          <div>
-            <div class="sidebar-doc-name">${escapeHtml(doc.title)}</div>
-            <div class="sidebar-doc-meta">${formatBytes(doc.file_size)}</div>
-          </div>
-        </div>`;
+    function renderSidebarList() {
+      const list = $("#sidebar-list");
+      list.innerHTML = docsCache.map(d => {
+        const active = d.id === selectedDocId ? " active" : "";
+        return `
+          <div class="sidebar-doc${active}" data-id="${d.id}">
+            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="square"><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>
+            <div>
+              <div class="sidebar-doc-name">${escapeHtml(d.title)}</div>
+              <div class="sidebar-doc-meta">${formatBytes(d.file_size)}</div>
+            </div>
+          </div>`;
+      }).join("");
+      list.querySelectorAll(".sidebar-doc").forEach(el =>
+        el.addEventListener("click", () => selectDoc(el.dataset.id))
+      );
     }
 
-    /* ================================================================
-       Select a document — load detail panel
-    ================================================================ */
+    /* ====================================================================
+       Select document — load all data and render
+    ==================================================================== */
     async function selectDoc(docId) {
       selectedDocId = docId;
+      opensLevel = "doc"; pagesLevel = "doc";
+      opensViewer = ""; pagesViewer = "";
 
-      // Highlight sidebar item.
-      document.querySelectorAll(".sidebar-doc").forEach(el => {
-        el.classList.toggle("active", el.dataset.id === docId);
-      });
+      document.querySelectorAll(".sidebar-doc").forEach(el =>
+        el.classList.toggle("active", el.dataset.id === docId)
+      );
+
+      // Reset chart tab UI
+      document.querySelectorAll(".chart-tab[data-chart='opens']").forEach(b =>
+        b.classList.toggle("active", b.dataset.level === "doc")
+      );
+      document.querySelectorAll(".chart-tab[data-chart='pages']").forEach(b =>
+        b.classList.toggle("active", b.dataset.level === "doc")
+      );
+      hide($("#opens-viewer-wrap"));
+      hide($("#pages-viewer-wrap"));
 
       hide($("#empty-state"));
       show($("#doc-detail"));
@@ -287,14 +339,13 @@
       const doc = docsCache.find(d => d.id === docId);
       if (!doc) return;
 
-      // Populate header.
       $("#detail-title").textContent = doc.title;
       $("#rename-input").value = doc.title;
       $("#detail-meta").textContent =
         `${formatBytes(doc.file_size)} · uploaded ${formatDate(doc.created_at)}`;
       $("#download-toggle").checked = !!doc.download_allowed;
 
-      // Fetch analytics data.
+      // Fetch data
       const [{ data: sessions }, { data: links }] = await Promise.all([
         sb.from("view_sessions")
           .select("id, viewer_email, ip_address, opened_at, total_seconds")
@@ -306,39 +357,57 @@
           .order("created_at", { ascending: false }),
       ]);
 
-      const sessionIds = (sessions || []).map(s => s.id);
-      let pageViews = [];
+      currentSessions = sessions || [];
+      const sessionIds = currentSessions.map(s => s.id);
+
       if (sessionIds.length) {
-        const { data } = await sb.from("page_views")
+        const { data: pvs } = await sb.from("page_views")
           .select("session_id, page_number, seconds_spent")
           .in("session_id", sessionIds);
-        pageViews = data || [];
+        currentPageViews = pvs || [];
+      } else {
+        currentPageViews = [];
       }
 
-      renderMetrics(sessions || [], links || []);
-      renderChart(sessions || []);
-      renderPageBars(sessions || [], pageViews);
+      renderMetrics(currentSessions, links || []);
+      populateViewerDropdowns(currentSessions);
+      updateOpensChart();
+      updatePagesChart();
       renderLinks(links || []);
-      renderSessions(sessions || [], pageViews);
+      renderSessions(currentSessions, currentPageViews);
     }
 
-    /* ================================================================
-       Metrics
-    ================================================================ */
+    /* ====================================================================
+       Metrics row
+    ==================================================================== */
     function renderMetrics(sessions, links) {
-      const totalTime = sessions.reduce((s, r) => s + (r.total_seconds || 0), 0);
-      const uniqueReaders = new Set(sessions.map(s => s.viewer_email)).size;
-      const activeLinks = links.filter(l => l.is_active).length;
       $("#m-opens").textContent = sessions.length;
-      $("#m-readers").textContent = uniqueReaders;
-      $("#m-time").textContent = formatDuration(totalTime);
-      $("#m-links").textContent = activeLinks;
+      $("#m-readers").textContent = new Set(sessions.map(s => s.viewer_email)).size;
+      $("#m-time").textContent = formatDuration(sessions.reduce((a, s) => a + (s.total_seconds || 0), 0));
+      $("#m-links").textContent = links.filter(l => l.is_active).length;
     }
 
-    /* ================================================================
-       Line chart — opens per day, last 30 days
-    ================================================================ */
-    function renderChart(sessions) {
+    /* ====================================================================
+       Viewer dropdowns
+    ==================================================================== */
+    function populateViewerDropdowns(sessions) {
+      const viewers = [...new Set(sessions.map(s => s.viewer_email).filter(Boolean))];
+      const makeOptions = () => `<option value="">All viewers</option>` +
+        viewers.map(v => `<option value="${escapeHtml(v)}">${escapeHtml(v)}</option>`).join("");
+      $("#opens-viewer-select").innerHTML = makeOptions();
+      $("#pages-viewer-select").innerHTML = makeOptions();
+      opensViewer = "";
+      pagesViewer = "";
+    }
+
+    /* ====================================================================
+       Chart A — Opens over time (line)
+    ==================================================================== */
+    function updateOpensChart() {
+      const sessions = (opensLevel === "viewer" && opensViewer)
+        ? currentSessions.filter(s => s.viewer_email === opensViewer)
+        : currentSessions;
+
       const byDate = {};
       sessions.forEach(s => {
         const d = (s.opened_at || "").slice(0, 10);
@@ -350,13 +419,15 @@
         const dt = new Date();
         dt.setDate(dt.getDate() - i);
         const key = dt.toISOString().slice(0, 10);
-        labels.push(key.slice(5)); // MM-DD
+        labels.push(key.slice(5));
         data.push(byDate[key] || 0);
       }
 
-      if (chartInstance) chartInstance.destroy();
-      const ctx = document.getElementById("opens-chart").getContext("2d");
-      chartInstance = new Chart(ctx, {
+      const area = $("#opens-chart-area");
+      area.innerHTML = `<div class="chart-canvas-wrap"><canvas id="opens-chart"></canvas></div>`;
+
+      if (chartOpens) { chartOpens.destroy(); chartOpens = null; }
+      chartOpens = new Chart(document.getElementById("opens-chart").getContext("2d"), {
         type: "line",
         data: {
           labels,
@@ -375,81 +446,145 @@
         options: {
           responsive: true,
           maintainAspectRatio: false,
-          plugins: {
-            legend: { display: false },
-            tooltip: { mode: "index", intersect: false },
-          },
+          plugins: { legend: { display: false }, tooltip: { mode: "index", intersect: false } },
           scales: {
             x: {
               grid: { display: false },
-              ticks: { maxTicksLimit: 10, font: { family: "'IBM Plex Mono'", size: 10 }, color: "#4b4b57" },
+              ticks: { maxTicksLimit: 10, font: { family: "'IBM Plex Mono'", size: 9 }, color: "#4b4b57" },
             },
             y: {
               beginAtZero: true,
-              ticks: { stepSize: 1, font: { family: "'IBM Plex Mono'", size: 10 }, color: "#4b4b57" },
-              grid: { color: "#d9d7cf" },
+              ticks: { stepSize: 1, font: { family: "'IBM Plex Mono'", size: 9 }, color: "#4b4b57" },
+              grid: { color: "#eeece8" },
             },
           },
         },
       });
     }
 
-    /* ================================================================
-       Page analytics bars
-    ================================================================ */
-    function renderPageBars(sessions, pageViews) {
+    /* ====================================================================
+       Chart B — Time per page (horizontal bar)
+    ==================================================================== */
+    function updatePagesChart() {
+      const sessions = (pagesLevel === "viewer" && pagesViewer)
+        ? currentSessions.filter(s => s.viewer_email === pagesViewer)
+        : currentSessions;
+
+      const sessionIds = new Set(sessions.map(s => s.id));
       const totals = {};
-      const sessionSet = new Set(sessions.map(s => s.id));
-      pageViews
-        .filter(pv => sessionSet.has(pv.session_id))
+      currentPageViews
+        .filter(pv => sessionIds.has(pv.session_id))
         .forEach(pv => {
           totals[pv.page_number] = (totals[pv.page_number] || 0) + pv.seconds_spent;
         });
 
       const pages = Object.keys(totals).map(Number).sort((a, b) => a - b);
-      const container = $("#page-bars");
+      const area = $("#pages-chart-area");
+
       if (!pages.length) {
-        container.innerHTML = `<p style="font-size:0.85rem;color:var(--ink-soft)">No page data yet.</p>`;
+        area.innerHTML = `<div class="chart-no-data">No page data yet</div>`;
+        if (chartPages) { chartPages.destroy(); chartPages = null; }
         return;
       }
-      const max = Math.max(...pages.map(p => totals[p]), 1);
-      container.innerHTML = pages.map(p => `
-        <div class="bar-row">
-          <span class="bar-label">Page ${p}</span>
-          <div class="bar-track"><div class="bar-fill" style="width:${Math.max(2, (totals[p] / max) * 100)}%"></div></div>
-          <span class="bar-value">${formatDuration(totals[p])}</span>
-        </div>`).join("");
+
+      area.innerHTML = `<div class="chart-canvas-wrap"><canvas id="pages-chart"></canvas></div>`;
+      if (chartPages) { chartPages.destroy(); chartPages = null; }
+
+      chartPages = new Chart(document.getElementById("pages-chart").getContext("2d"), {
+        type: "bar",
+        data: {
+          labels: pages.map(p => `Pg ${p}`),
+          datasets: [{
+            label: "Seconds",
+            data: pages.map(p => totals[p]),
+            backgroundColor: "#1f4fd8",
+            borderWidth: 0,
+            barThickness: Math.max(10, Math.min(28, Math.floor(160 / pages.length))),
+          }],
+        },
+        options: {
+          indexAxis: "y",
+          responsive: true,
+          maintainAspectRatio: false,
+          plugins: { legend: { display: false }, tooltip: { callbacks: {
+            label: ctx => ` ${formatDuration(ctx.raw)}`
+          }}},
+          scales: {
+            x: {
+              beginAtZero: true,
+              ticks: { font: { family: "'IBM Plex Mono'", size: 9 }, color: "#4b4b57",
+                callback: v => formatDuration(v) },
+              grid: { color: "#eeece8" },
+            },
+            y: {
+              ticks: { font: { family: "'IBM Plex Mono'", size: 9 }, color: "#4b4b57" },
+              grid: { display: false },
+            },
+          },
+        },
+      });
     }
 
-    /* ================================================================
-       Share links list
-    ================================================================ */
+    /* ====================================================================
+       Chart tab toggle handlers
+    ==================================================================== */
+    document.querySelectorAll(".chart-tab").forEach(btn => {
+      btn.addEventListener("click", () => {
+        const chart = btn.dataset.chart;
+        const level = btn.dataset.level;
+        document.querySelectorAll(`.chart-tab[data-chart="${chart}"]`).forEach(b =>
+          b.classList.toggle("active", b === btn)
+        );
+        if (chart === "opens") {
+          opensLevel = level;
+          if (level === "viewer") { show($("#opens-viewer-wrap")); }
+          else { hide($("#opens-viewer-wrap")); opensViewer = ""; }
+          updateOpensChart();
+        } else {
+          pagesLevel = level;
+          if (level === "viewer") { show($("#pages-viewer-wrap")); }
+          else { hide($("#pages-viewer-wrap")); pagesViewer = ""; }
+          updatePagesChart();
+        }
+      });
+    });
+
+    $("#opens-viewer-select").addEventListener("change", e => {
+      opensViewer = e.target.value;
+      updateOpensChart();
+    });
+
+    $("#pages-viewer-select").addEventListener("change", e => {
+      pagesViewer = e.target.value;
+      updatePagesChart();
+    });
+
+    /* ====================================================================
+       Share links
+    ==================================================================== */
     function renderLinks(links) {
       const container = $("#links-list");
       const active = links.filter(l => l.is_active);
       if (!active.length) {
-        container.innerHTML = `<p style="font-size:0.85rem;color:var(--ink-soft);padding-bottom:8px;">No active links yet.</p>`;
+        container.innerHTML = `<p style="font-size:0.82rem;color:var(--ink-soft);padding-bottom:6px;">No active links yet.</p>`;
         return;
       }
       container.innerHTML = active.map(link => {
         const label = link.is_public
-          ? `<span class="badge badge-amber" style="font-size:0.65rem;">Public</span>`
-          : ``;
-        const expLabel = link.access_expires_at
-          ? `Expires ${formatDate(link.access_expires_at)}`
-          : "No expiry";
-        const expValue = link.access_expires_at
-          ? new Date(link.access_expires_at).toISOString().slice(0, 16)
+          ? `<span class="badge badge-amber" style="font-size:0.62rem;padding:2px 7px;">Public</span>`
           : "";
+        const exp = link.access_expires_at ? formatDate(link.access_expires_at) : "No expiry";
+        const expVal = link.access_expires_at
+          ? new Date(link.access_expires_at).toISOString().slice(0, 16) : "";
         return `
-          <div class="link-row" data-link-id="${link.id}">
+          <div class="link-row">
             <div class="link-row-left">
               <span class="link-email">${link.is_public ? "Public access" : escapeHtml(link.allowed_email || "")}</span>
               ${label}
-              <span class="link-expiry">${expLabel}</span>
+              <span class="link-expiry">${exp}</span>
             </div>
             <div class="link-actions">
-              <input type="datetime-local" class="expiry-input expiry-setter" data-link-id="${link.id}" value="${expValue}" title="Set expiry" />
+              <input type="datetime-local" class="expiry-input expiry-setter" data-link-id="${link.id}" value="${expVal}" title="Set expiry" style="width:140px;" />
               <button class="btn btn-sm copy-link-btn" data-token="${link.token}">Copy</button>
               <button class="btn btn-sm btn-danger revoke-btn" data-link-id="${link.id}">Revoke</button>
             </div>
@@ -458,9 +593,9 @@
 
       container.querySelectorAll(".copy-link-btn").forEach(btn =>
         btn.addEventListener("click", async () => {
-          await copyLink(btn.dataset.token);
+          await copyShareLink(btn.dataset.token);
           btn.textContent = "Copied";
-          setTimeout(() => btn.textContent = "Copy", 1500);
+          setTimeout(() => btn.textContent = "Copy", 1600);
         })
       );
       container.querySelectorAll(".revoke-btn").forEach(btn =>
@@ -469,27 +604,24 @@
           await selectDoc(selectedDocId);
         })
       );
-      container.querySelectorAll(".expiry-setter").forEach(input =>
-        input.addEventListener("change", async () => {
-          const val = input.value ? new Date(input.value).toISOString() : null;
-          await sb.from("share_links").update({ access_expires_at: val }).eq("id", input.dataset.linkId);
+      container.querySelectorAll(".expiry-setter").forEach(inp =>
+        inp.addEventListener("change", async () => {
+          const val = inp.value ? new Date(inp.value).toISOString() : null;
+          await sb.from("share_links").update({ access_expires_at: val }).eq("id", inp.dataset.linkId);
           await selectDoc(selectedDocId);
         })
       );
     }
 
-    /* ================================================================
+    /* ====================================================================
        Sessions table
-    ================================================================ */
+    ==================================================================== */
     function renderSessions(sessions, pageViews) {
       const bySession = {};
-      pageViews.forEach(pv => {
-        (bySession[pv.session_id] ||= []).push(pv);
-      });
-
+      pageViews.forEach(pv => (bySession[pv.session_id] ||= []).push(pv));
       const tbody = $("#sessions-tbody");
       if (!sessions.length) {
-        tbody.innerHTML = `<tr><td colspan="5" style="text-align:center;color:var(--ink-soft);padding:20px;">No sessions yet.</td></tr>`;
+        tbody.innerHTML = `<tr><td colspan="5" style="text-align:center;color:var(--ink-soft);padding:24px;">No sessions yet.</td></tr>`;
         return;
       }
       tbody.innerHTML = sessions.map(s => {
@@ -497,20 +629,19 @@
           .sort((a, b) => a.page_number - b.page_number)
           .map(pv => `p${pv.page_number}: ${formatDuration(pv.seconds_spent)}`)
           .join(" · ");
-        return `
-          <tr>
-            <td><strong>${escapeHtml(s.viewer_email)}</strong></td>
-            <td class="mono" style="white-space:nowrap">${formatDate(s.opened_at)}</td>
-            <td class="mono">${escapeHtml(s.ip_address || "—")}</td>
-            <td class="mono">${formatDuration(s.total_seconds)}</td>
-            <td class="mono" style="font-size:0.75rem;max-width:260px;">${pages || "—"}</td>
-          </tr>`;
+        return `<tr>
+          <td><strong>${escapeHtml(s.viewer_email)}</strong></td>
+          <td class="mono" style="white-space:nowrap;font-size:0.78rem;">${formatDate(s.opened_at)}</td>
+          <td class="mono" style="font-size:0.78rem;">${escapeHtml(s.ip_address || "—")}</td>
+          <td class="mono" style="font-size:0.78rem;">${formatDuration(s.total_seconds)}</td>
+          <td class="mono" style="font-size:0.72rem;max-width:240px;word-break:break-word;">${pages || "—"}</td>
+        </tr>`;
       }).join("");
     }
 
-    /* ================================================================
+    /* ====================================================================
        Upload
-    ================================================================ */
+    ==================================================================== */
     const dropzone = $("#dropzone");
     const fileInput = $("#file-input");
 
@@ -532,20 +663,19 @@
       if (file.type !== "application/pdf") { setAlert(gAlert(), "Only PDF files are supported.", "error"); return; }
       if (file.size > 50 * 1024 * 1024) { setAlert(gAlert(), "File exceeds 50 MB.", "error"); return; }
 
-      const label = replaceDocId ? "Replacing document…" : `Uploading "${file.name}"…`;
-      setAlert(gAlert(), label, "info");
+      setAlert(gAlert(), replaceDocId ? "Replacing document…" : `Uploading "${file.name}"…`, "info");
 
       const newPath = `${session.user.id}/${crypto.randomUUID()}.pdf`;
       const { error: upErr } = await sb.storage.from("documents").upload(newPath, file, { contentType: "application/pdf" });
       if (upErr) { setAlert(gAlert(), `Upload failed: ${upErr.message}`, "error"); return; }
 
       if (replaceDocId) {
-        const oldDoc = docsCache.find(d => d.id === replaceDocId);
+        const old = docsCache.find(d => d.id === replaceDocId);
         const { error: dbErr } = await sb.from("documents")
           .update({ storage_path: newPath, file_size: file.size })
           .eq("id", replaceDocId);
-        if (dbErr) { setAlert(gAlert(), `Could not replace document: ${dbErr.message}`, "error"); return; }
-        if (oldDoc?.storage_path) await sb.storage.from("documents").remove([oldDoc.storage_path]);
+        if (dbErr) { setAlert(gAlert(), `Could not replace: ${dbErr.message}`, "error"); return; }
+        if (old?.storage_path) await sb.storage.from("documents").remove([old.storage_path]);
         setAlert(gAlert(), "Document replaced. All existing links now serve the new file.", "success");
       } else {
         const { error: dbErr } = await sb.from("documents").insert({
@@ -554,18 +684,15 @@
           storage_path: newPath,
           file_size: file.size,
         });
-        if (dbErr) { setAlert(gAlert(), `Could not save document: ${dbErr.message}`, "error"); return; }
-        setAlert(gAlert(), `"${file.name}" uploaded. Click it in the sidebar to share.`, "success");
+        if (dbErr) { setAlert(gAlert(), `Could not save: ${dbErr.message}`, "error"); return; }
+        setAlert(gAlert(), `"${file.name}" uploaded. Select it in the sidebar to share.`, "success");
       }
-
       await loadSidebar();
     }
 
-    /* ================================================================
-       Settings handlers
-    ================================================================ */
-
-    // Rename
+    /* ====================================================================
+       Settings actions
+    ==================================================================== */
     $("#btn-rename").addEventListener("click", async () => {
       if (!selectedDocId) return;
       const title = $("#rename-input").value.trim();
@@ -573,31 +700,24 @@
       const { error } = await sb.from("documents").update({ title }).eq("id", selectedDocId);
       if (error) { setAlert(dAlert(), `Rename failed: ${error.message}`, "error"); return; }
       docsCache = docsCache.map(d => d.id === selectedDocId ? { ...d, title } : d);
-      renderSidebar();
+      renderSidebarList();
       $("#detail-title").textContent = title;
-      setAlert(dAlert(), "Document renamed.", "success");
+      setAlert(dAlert(), "Renamed.", "success");
     });
 
-    // Download toggle
-    $("#download-toggle").addEventListener("change", async (e) => {
+    $("#download-toggle").addEventListener("change", async e => {
       if (!selectedDocId) return;
-      const allowed = e.target.checked;
-      await sb.from("documents").update({ download_allowed: allowed }).eq("id", selectedDocId);
-      docsCache = docsCache.map(d => d.id === selectedDocId ? { ...d, download_allowed: allowed } : d);
+      await sb.from("documents").update({ download_allowed: e.target.checked }).eq("id", selectedDocId);
+      docsCache = docsCache.map(d => d.id === selectedDocId ? { ...d, download_allowed: e.target.checked } : d);
     });
 
-    // Replace PDF
     $("#btn-replace").addEventListener("click", () => {
       if (!selectedDocId) return;
       const inp = $("#replace-input");
-      inp.onchange = () => {
-        if (inp.files.length) uploadFile(inp.files[0], selectedDocId);
-        inp.value = "";
-      };
+      inp.onchange = () => { if (inp.files.length) uploadFile(inp.files[0], selectedDocId); inp.value = ""; };
       inp.click();
     });
 
-    // Delete
     $("#btn-delete").addEventListener("click", async () => {
       if (!selectedDocId) return;
       const doc = docsCache.find(d => d.id === selectedDocId);
@@ -610,13 +730,18 @@
       await loadSidebar();
     });
 
-    // Add email recipient
+    /* ====================================================================
+       Add share link forms
+    ==================================================================== */
     const addEmailFormEl = $("#add-email-form");
     const addPublicFormEl = $("#add-public-form");
 
     $("#btn-show-add-email").addEventListener("click", () => {
       addEmailFormEl.classList.toggle("hidden");
-      if (!addEmailFormEl.classList.contains("hidden")) addPublicFormEl.classList.add("hidden");
+      if (!addEmailFormEl.classList.contains("hidden")) {
+        addPublicFormEl.classList.add("hidden");
+        $("#new-email").focus();
+      }
     });
     $("#btn-show-add-public").addEventListener("click", () => {
       addPublicFormEl.classList.toggle("hidden");
@@ -628,13 +753,12 @@
       const email = $("#new-email").value.trim().toLowerCase();
       if (!email) return;
       const expiry = $("#new-email-expiry").value
-        ? new Date($("#new-email-expiry").value).toISOString()
-        : null;
+        ? new Date($("#new-email-expiry").value).toISOString() : null;
       const { data: link, error } = await sb.from("share_links")
         .insert({ document_id: selectedDocId, allowed_email: email, is_public: false, access_expires_at: expiry })
         .select("token").single();
       if (error) { setAlert(dAlert(), `Could not create link: ${error.message}`, "error"); return; }
-      await copyLink(link.token);
+      await copyShareLink(link.token);
       setAlert(dAlert(), `Link for ${email} created and copied to clipboard.`, "success");
       $("#new-email").value = "";
       $("#new-email-expiry").value = "";
@@ -645,43 +769,30 @@
     $("#btn-add-public").addEventListener("click", async () => {
       if (!selectedDocId) return;
       const expiry = $("#new-public-expiry").value
-        ? new Date($("#new-public-expiry").value).toISOString()
-        : null;
+        ? new Date($("#new-public-expiry").value).toISOString() : null;
       const { data: link, error } = await sb.from("share_links")
         .insert({ document_id: selectedDocId, is_public: true, allowed_email: null, access_expires_at: expiry })
         .select("token").single();
       if (error) { setAlert(dAlert(), `Could not create public link: ${error.message}`, "error"); return; }
-      await copyLink(link.token);
+      await copyShareLink(link.token);
       setAlert(dAlert(), "Public link created and copied to clipboard.", "success");
       $("#new-public-expiry").value = "";
       addPublicFormEl.classList.add("hidden");
       await selectDoc(selectedDocId);
     });
 
-    /* ================================================================
+    /* ====================================================================
        Helpers
-    ================================================================ */
-    function renderSidebar() {
-      const list = $("#sidebar-list");
-      list.innerHTML = docsCache.map(renderSidebarItem).join("");
-      list.querySelectorAll(".sidebar-doc").forEach(el =>
-        el.addEventListener("click", () => selectDoc(el.dataset.id))
-      );
-    }
-
-    async function copyLink(token) {
+    ==================================================================== */
+    async function copyShareLink(token) {
       const base = (SECUREDOC_CONFIG.SITE_URL || window.location.origin).replace(/\/$/, "");
       const url = `${base}/view.html?t=${token}`;
-      try {
-        await navigator.clipboard.writeText(url);
-      } catch {
-        prompt("Copy this link:", url);
-      }
+      try { await navigator.clipboard.writeText(url); }
+      catch { prompt("Copy this link:", url); }
     }
 
-    const signout = signOut;
-    $("#signout-btn").addEventListener("click", signout);
-    $("#signout-btn-2").addEventListener("click", signout);
+    $("#signout-btn").addEventListener("click", signOut);
+    $("#signout-btn-2").addEventListener("click", signOut);
 
     init();
   </script>

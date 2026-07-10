@@ -1,6 +1,6 @@
-// track-view — receives periodic heartbeats from the viewer with total time
-// and per-page seconds. Writes are authenticated: the caller's OTP-verified
-// email must match the session it is updating.
+// track-view — receives periodic heartbeats from the viewer.
+// For OTP-verified (private link) users: email must match the session.
+// For anonymous (public link) users: session existence is enough.
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
 import { corsHeaders, jsonResponse } from "../_shared/cors.ts";
 
@@ -27,9 +27,11 @@ Deno.serve(async (req) => {
     );
 
     const { data: userData, error: userError } = await admin.auth.getUser(jwt);
-    if (userError || !userData.user?.email) {
+    if (userError || !userData.user) {
       return jsonResponse({ error: "Not authenticated" }, 401);
     }
+
+    const isAnonymous = userData.user.is_anonymous ?? false;
 
     const { data: session } = await admin
       .from("view_sessions")
@@ -37,11 +39,17 @@ Deno.serve(async (req) => {
       .eq("id", session_id)
       .single();
 
-    if (
-      !session ||
-      session.viewer_email !== userData.user.email.toLowerCase()
-    ) {
-      return jsonResponse({ error: "Access denied" }, 403);
+    if (!session) {
+      return jsonResponse({ error: "Session not found" }, 404);
+    }
+
+    // Private links: verify the caller's verified email owns this session.
+    // Public/anonymous links: just verify the session exists (no email to match).
+    if (!isAnonymous) {
+      const userEmail = userData.user.email?.toLowerCase() ?? "";
+      if (!userEmail || session.viewer_email !== userEmail) {
+        return jsonResponse({ error: "Access denied" }, 403);
+      }
     }
 
     await admin

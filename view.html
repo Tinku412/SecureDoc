@@ -29,6 +29,23 @@
     </div>
   </div>
 
+  <!-- Public link: name/email form (no OTP needed) -->
+  <div class="gate-wrap hidden" id="gate-public">
+    <div class="card gate-card">
+      <div class="panel-label">Document access</div>
+      <h2>Enter your details to view</h2>
+      <p>This document is open to anyone with this link. Your name or email will be used to watermark every page — no verification needed.</p>
+      <div class="alert hidden" id="public-alert"></div>
+      <form id="public-form">
+        <div class="field">
+          <label for="public-label-input">Your name or email</label>
+          <input type="text" id="public-label-input" required autocomplete="name" placeholder="Your Name or you@company.com" />
+        </div>
+        <button class="btn btn-primary btn-block" type="submit" id="public-submit">View document</button>
+      </form>
+    </div>
+  </div>
+
   <!-- Step 1: email (private links) -->
   <div class="gate-wrap hidden" id="gate-email">
     <div class="card gate-card">
@@ -152,27 +169,40 @@
     }
 
     /* -----------------------------------------------------------------------
-       Public link path — anonymous sign-in
+       Public link path — show name/email form (no OTP)
     ----------------------------------------------------------------------- */
-    async function openAsPublic() {
+    function openAsPublic() {
       hide($("#gate-loading"));
-      show($("#viewer"));
-      $("#doc-title").textContent = docTitle;
-      $("#viewer-meta").textContent = "Public document · view is being recorded";
-      $("#pdf-container").innerHTML = `<p class="loading-note">Preparing your document…</p>`;
+      show($("#gate-public"));
+      $("#public-label-input").focus();
+    }
+
+    $("#public-form").addEventListener("submit", async (e) => {
+      e.preventDefault();
+      const label = $("#public-label-input").value.trim();
+      if (!label) return;
+      const btn = $("#public-submit");
+      btn.disabled = true;
+      clearAlert($("#public-alert"));
 
       const { data: anonData, error: anonError } = await sb.auth.signInAnonymously();
       if (anonError || !anonData.session) {
-        showDenied(
-          "Anonymous sign-in is not enabled on this project. " +
-          "Enable it in Supabase → Authentication → Providers → Anonymous.",
-          "Configuration error"
+        setAlert(
+          $("#public-alert"),
+          "Could not open document. If this persists, contact the sender. " +
+          "(Admin: enable Anonymous sign-in in Supabase → Auth → Providers.)",
+          "error"
         );
+        btn.disabled = false;
         return;
       }
+
+      viewerEmail = label;
       viewerJwt = anonData.session.access_token;
-      await loadDocument();
-    }
+      hide($("#gate-public"));
+      show($("#viewer"));
+      await loadDocument(label);
+    });
 
     /* -----------------------------------------------------------------------
        Private link — email gate
@@ -258,8 +288,10 @@
     /* -----------------------------------------------------------------------
        Fetch + render watermarked PDF
     ----------------------------------------------------------------------- */
-    async function loadDocument() {
+    async function loadDocument(publicLabel = "") {
       try {
+        const body = { token: shareToken };
+        if (publicLabel) body.public_label = publicLabel;
         const res = await fetch(`${FUNCTIONS_URL}/serve-document`, {
           method: "POST",
           headers: {
@@ -267,7 +299,7 @@
             apikey: SECUREDOC_CONFIG.SUPABASE_ANON_KEY,
             Authorization: `Bearer ${viewerJwt}`,
           },
-          body: JSON.stringify({ token: shareToken }),
+          body: JSON.stringify(body),
         });
 
         if (!res.ok) {
