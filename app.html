@@ -16,14 +16,10 @@
         </span>
         SecureDoc
       </a>
-      <div class="nav-links">
-        <span class="mono" id="nav-user" style="color:var(--ink-soft);font-size:0.78rem;"></span>
-        <button class="btn btn-sm" id="signout-btn">Sign out</button>
-      </div>
     </div>
   </header>
 
-  <div class="dashboard-layout" id="dashboard" style="display:none">
+  <div class="dashboard-layout hidden" id="dashboard">
 
     <!-- ====== SIDEBAR ====== -->
     <aside class="sidebar">
@@ -34,7 +30,6 @@
           </span>
           Documents
         </div>
-        <div class="sidebar-user" id="sidebar-user"></div>
       </div>
 
       <div class="sidebar-scroll">
@@ -50,10 +45,19 @@
           <p class="hint">Drop or tap · max 50 MB</p>
         </div>
         <input type="file" id="file-input" accept="application/pdf" class="hidden" />
-      </div>
 
-      <div class="sidebar-bottom">
-        <button class="btn btn-sm btn-block" id="signout-btn-2" style="border-color:var(--line-soft);color:var(--ink-soft);">Sign out</button>
+        <button class="btn btn-sm btn-block add-url-toggle" id="btn-add-url-toggle">
+          <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="square"><circle cx="12" cy="12" r="9"/><line x1="3" y1="12" x2="21" y2="12"/><path d="M12 3a14 14 0 000 18 14 14 0 000-18z"/></svg>
+          Add a URL instead
+        </button>
+        <div class="add-url-form hidden" id="add-url-form">
+          <input type="text" id="add-url-title" placeholder="Title (optional)" />
+          <input type="url" id="add-url-input" placeholder="https://example.com/article" />
+          <div class="add-url-form-actions">
+            <button class="btn btn-sm btn-dark" id="btn-add-url-submit">Add</button>
+            <button class="btn btn-sm" id="btn-add-url-cancel">Cancel</button>
+          </div>
+        </div>
       </div>
     </aside>
 
@@ -75,10 +79,25 @@
         <div class="doc-header">
           <div class="doc-title-group">
             <div class="panel-label">Document</div>
-            <h1 id="detail-title">—</h1>
+            <div class="doc-title-row">
+              <h1 id="detail-title">—</h1>
+              <input type="text" id="rename-input" class="rename-input hidden" placeholder="Document name" />
+              <div class="doc-title-actions">
+                <button class="icon-btn" id="btn-rename-toggle" title="Rename document">
+                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="square"><path d="M12 20h9"/><path d="M16.5 3.5a2.12 2.12 0 013 3L7 19l-4 1 1-4L16.5 3.5z"/></svg>
+                </button>
+                <button class="icon-btn" id="btn-replace" title="Replace PDF">
+                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="square"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4M17 8l-5-5-5 5M12 3v12"/></svg>
+                </button>
+                <button class="icon-btn icon-btn-danger" id="btn-delete" title="Delete document">
+                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="square"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14a2 2 0 01-2 2H8a2 2 0 01-2-2L5 6"/></svg>
+                </button>
+              </div>
+            </div>
             <div class="doc-header-meta" id="detail-meta"></div>
           </div>
         </div>
+        <input type="file" id="replace-input" accept="application/pdf" class="hidden" />
         <div class="alert hidden" id="doc-alert" style="margin-bottom:18px;"></div>
 
         <!-- Metrics -->
@@ -128,111 +147,176 @@
           </div>
         </div><!-- /charts-row -->
 
-        <!-- ====== SETTINGS CARD ====== -->
+        <!-- ====== LINKS CARD ====== -->
         <div class="settings-card">
-          <div class="panel-label" style="margin-bottom:18px;">Link settings</div>
+          <div class="links-card-head">
+            <div class="links-card-head-text">
+              <div class="panel-label">Share links</div>
+              <h3>All links</h3>
+              <p>Create as many links as you need — each has its own access rules, watermark and CTA.</p>
+            </div>
+            <button class="btn btn-dark btn-sm" id="btn-new-link">
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="square"><path d="M12 5v14M5 12h14"/></svg>
+              Create link
+            </button>
+          </div>
+          <div class="links-table-wrap">
+            <table class="links-table">
+              <thead>
+                <tr>
+                  <th>Name</th>
+                  <th>Link</th>
+                  <th>Views</th>
+                  <th>Last viewed</th>
+                  <th></th>
+                </tr>
+              </thead>
+              <tbody id="links-list"></tbody>
+            </table>
+          </div>
+        </div>
 
-          <!-- Share link -->
-          <div class="settings-section">
-            <div class="settings-section-head">Share link</div>
-            <div class="link-url-row" id="link-url-row">
-              <span class="link-url-text" id="link-url-text" style="color:var(--ink-soft);font-style:italic;">No link yet — generate one below.</span>
-              <button class="btn btn-sm" id="btn-copy-link" style="display:none">Copy</button>
-            </div>
-            <div style="display:flex;gap:8px;margin-top:10px;flex-wrap:wrap;">
-              <button class="btn btn-sm btn-dark" id="btn-new-link">Generate link</button>
-              <button class="btn btn-sm btn-danger" id="btn-revoke-link" style="display:none">Revoke link</button>
-            </div>
+        <!-- ====== LINK SETTINGS DRAWER ====== -->
+        <div class="drawer-overlay" id="link-drawer-overlay"></div>
+        <div class="drawer-panel" id="link-drawer">
+          <div class="drawer-header">
+            <h3 id="link-settings-heading">Edit link</h3>
+            <button class="drawer-close" id="btn-drawer-close" title="Close" aria-label="Close">
+              <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="square"><path d="M4 4l16 16M20 4L4 20"/></svg>
+            </button>
           </div>
 
-          <!-- Document name -->
-          <div class="settings-section">
-            <div class="settings-section-head">Document name</div>
-            <div class="rename-row" style="border:none;padding:0;">
-              <input type="text" id="rename-input" placeholder="Document name" />
-              <button class="btn btn-sm btn-dark" id="btn-rename">Save</button>
-            </div>
-          </div>
+          <div class="drawer-body" id="link-fields">
 
-          <!-- Access controls -->
-          <div class="settings-section">
-            <div class="settings-section-head">Access controls</div>
+            <div class="url-doc-notice hidden" id="url-doc-hint">This is a URL item — only the call-to-action overlay applies below. There's no watermark or access gate for links to a URL.</div>
 
-            <div class="toggle-row">
-              <div class="toggle-label-group">
-                <div class="toggle-label">Restrict access to recipients</div>
-                <div class="toggle-hint">Only listed email addresses can open this link</div>
-              </div>
-              <label class="toggle-switch">
-                <input type="checkbox" id="toggle-restrict" />
-                <span class="toggle-track"><span class="toggle-thumb"></span></span>
-              </label>
+            <!-- Link name -->
+            <div class="settings-section">
+              <div class="settings-section-head">Link name</div>
+              <div class="settings-section-hint">Optional — helps you tell links apart, e.g. "Investor update" or "Public".</div>
+              <input type="text" id="link-name-input" class="setting-input" maxlength="60" placeholder="Untitled link" />
             </div>
 
-            <div class="toggle-row">
-              <div class="toggle-label-group">
-                <div class="toggle-label">Require email verification (OTP)</div>
-                <div class="toggle-hint">Visitors must verify their email with a one-time code</div>
-              </div>
-              <label class="toggle-switch">
-                <input type="checkbox" id="toggle-verify" />
-                <span class="toggle-track"><span class="toggle-thumb"></span></span>
-              </label>
-            </div>
+            <!-- Access controls (PDF documents only) -->
+            <div class="settings-section" id="access-controls-section">
+              <div class="settings-section-head">Access controls</div>
 
-            <div class="toggle-row">
-              <div class="toggle-label-group">
-                <div class="toggle-label">Time-limited access</div>
-                <div class="toggle-hint" id="expiry-hint">Link stops working after the set date and time</div>
-              </div>
-              <div style="display:flex;align-items:center;gap:10px;">
-                <input type="datetime-local" id="expiry-input" class="expiry-input" style="display:none;" />
+              <div class="toggle-row">
+                <div class="toggle-label-group">
+                  <div class="toggle-label">Restrict access to recipients</div>
+                  <div class="toggle-hint">Only listed email addresses can open this link</div>
+                </div>
                 <label class="toggle-switch">
-                  <input type="checkbox" id="toggle-expiry" />
+                  <input type="checkbox" id="toggle-restrict" />
+                  <span class="toggle-track"><span class="toggle-thumb"></span></span>
+                </label>
+              </div>
+
+              <div class="toggle-row">
+                <div class="toggle-label-group">
+                  <div class="toggle-label">Require email verification (OTP)</div>
+                  <div class="toggle-hint">Visitors must verify their email with a one-time code</div>
+                </div>
+                <label class="toggle-switch">
+                  <input type="checkbox" id="toggle-verify" />
+                  <span class="toggle-track"><span class="toggle-thumb"></span></span>
+                </label>
+              </div>
+
+              <div class="toggle-row">
+                <div class="toggle-label-group">
+                  <div class="toggle-label">Time-limited access</div>
+                  <div class="toggle-hint" id="expiry-hint">Link stops working after the set date and time</div>
+                </div>
+                <div style="display:flex;align-items:center;gap:10px;">
+                  <input type="datetime-local" id="expiry-input" class="expiry-input" style="display:none;" />
+                  <label class="toggle-switch">
+                    <input type="checkbox" id="toggle-expiry" />
+                    <span class="toggle-track"><span class="toggle-thumb"></span></span>
+                  </label>
+                </div>
+              </div>
+
+              <div class="toggle-row" style="border-bottom:none;">
+                <div class="toggle-label-group">
+                  <div class="toggle-label">Allow download</div>
+                  <div class="toggle-hint">Viewers can save the watermarked PDF</div>
+                </div>
+                <label class="toggle-switch">
+                  <input type="checkbox" id="download-toggle" checked />
                   <span class="toggle-track"><span class="toggle-thumb"></span></span>
                 </label>
               </div>
             </div>
 
-            <div class="toggle-row" style="border-bottom:none;">
-              <div class="toggle-label-group">
-                <div class="toggle-label">Allow download</div>
-                <div class="toggle-hint">Viewers can save the watermarked PDF</div>
+            <!-- Recipients (only shown when "Restrict access" is on) -->
+            <div class="settings-section hidden" id="recipients-section">
+              <div class="settings-section-head">Recipients</div>
+              <div class="settings-section-hint">Only these email addresses can access this link.</div>
+              <div class="recipient-list" id="recipients-list"></div>
+              <div class="add-recipient-row">
+                <input type="email" id="add-recip-input" placeholder="Add email address…" />
+                <button class="btn btn-sm btn-dark" id="btn-add-recip">Add</button>
               </div>
-              <label class="toggle-switch">
-                <input type="checkbox" id="download-toggle" checked />
-                <span class="toggle-track"><span class="toggle-thumb"></span></span>
-              </label>
             </div>
-          </div>
 
-          <!-- Recipients -->
-          <div class="settings-section">
-            <div class="settings-section-head">Recipients</div>
-            <div class="settings-section-hint">Emails that can access this link. Required when "Restrict access" is enabled.</div>
-            <div class="recipient-list" id="recipients-list"></div>
-            <div class="add-recipient-row">
-              <input type="email" id="add-recip-input" placeholder="Add email address…" />
-              <button class="btn btn-sm btn-dark" id="btn-add-recip">Add</button>
+            <!-- Watermark style (PDF documents only) -->
+            <div class="settings-section" id="watermark-section">
+              <div class="settings-section-head">Watermark style</div>
+              <div class="settings-section-hint">Choose how the watermark appears on viewed and downloaded pages.</div>
+              <div class="watermark-style-grid">
+                <div class="field-inline">
+                  <label for="watermark-layout">Layout</label>
+                  <select id="watermark-layout" class="setting-select">
+                    <option value="single_line">Single line</option>
+                    <option value="stacked">Line break (stacked)</option>
+                  </select>
+                </div>
+                <div class="field-inline">
+                  <label for="watermark-direction">Direction</label>
+                  <select id="watermark-direction" class="setting-select">
+                    <option value="diagonal">Diagonal</option>
+                    <option value="horizontal">Horizontal</option>
+                    <option value="vertical">Vertical</option>
+                  </select>
+                </div>
+                <div class="field-inline">
+                  <label for="watermark-repeat">Repeat</label>
+                  <select id="watermark-repeat" class="setting-select">
+                    <option value="single">Single (centered)</option>
+                    <option value="tiled">Tiled (repeated)</option>
+                  </select>
+                </div>
+              </div>
             </div>
-          </div>
 
-          <!-- Document actions -->
-          <div class="settings-section" style="border-bottom:none;">
-            <div class="settings-section-head">Document</div>
-            <div style="display:flex;gap:8px;flex-wrap:wrap;">
-              <button class="btn btn-sm" id="btn-replace">
-                <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="square"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4M17 8l-5-5-5 5M12 3v12"/></svg>
-                Replace PDF
-              </button>
-              <button class="btn btn-sm btn-danger" id="btn-delete">
-                <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="square"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14a2 2 0 01-2 2H8a2 2 0 01-2-2L5 6"/></svg>
-                Delete document
-              </button>
+            <!-- Call-to-action overlay -->
+            <div class="settings-section" style="border-bottom:none;">
+              <div class="settings-section-head">Call-to-action overlay</div>
+              <div class="settings-section-hint">Shown as a banner fixed to the bottom of the screen while the document is being viewed. Leave the button fields empty to turn it off.</div>
+              <div class="cta-settings-grid">
+                <div class="field-inline field-inline-wide">
+                  <label for="cta-headline">Headline</label>
+                  <input type="text" id="cta-headline" class="setting-input" maxlength="140" placeholder="e.g. Want to work with us?" />
+                </div>
+                <div class="field-inline">
+                  <label for="cta-button-text">Button text</label>
+                  <input type="text" id="cta-button-text" class="setting-input" maxlength="40" placeholder="e.g. Book a call" />
+                </div>
+                <div class="field-inline">
+                  <label for="cta-button-url">Button URL</label>
+                  <input type="url" id="cta-button-url" class="setting-input" placeholder="https://…" />
+                </div>
+              </div>
             </div>
-            <input type="file" id="replace-input" accept="application/pdf" class="hidden" />
+
+          </div><!-- /link-fields -->
+
+          <div class="drawer-footer">
+            <span class="settings-dirty-hint hidden" id="settings-dirty-hint">Unsaved changes</span>
+            <button class="btn btn-dark" id="btn-save-settings" disabled>Save settings</button>
           </div>
-        </div><!-- /settings-card -->
+        </div><!-- /link-drawer -->
 
         <!-- Sessions table -->
         <div class="panel-label" style="margin-bottom:10px;">Viewer sessions</div>
@@ -241,6 +325,7 @@
             <thead>
               <tr>
                 <th>Reader</th>
+                <th>Link</th>
                 <th>Opened</th>
                 <th>IP address</th>
                 <th>Total time</th>
@@ -263,10 +348,12 @@
     /* ====================================================================
        State
     ==================================================================== */
-    let session = null;
     let docsCache = [];
     let selectedDocId = null;
-    let currentLink = null;          // active share_link row for selected doc
+    let linksCache = [];             // active share_links for the selected doc
+    let selectedLinkId = null;       // which link's settings are shown below
+    let currentLink = null;          // = linksCache.find(l => l.id === selectedLinkId)
+    let linkLabelsById = {};         // id -> display label, incl. revoked links (for the sessions table)
     let currentSessions = [];
     let currentPageViews = [];
     let opensLevel = "doc", pagesLevel = "doc";
@@ -280,13 +367,6 @@
        Init
     ==================================================================== */
     async function init() {
-      session = await requireOwnerSession();
-      if (!session) return;
-
-      $("#nav-user").textContent = session.user.email ?? "";
-      const name = session.user.user_metadata?.full_name ?? session.user.email?.split("@")[0] ?? "";
-      $("#sidebar-user").textContent = name;
-
       show($("#dashboard"));
       await loadSidebar();
     }
@@ -296,8 +376,7 @@
     ==================================================================== */
     async function loadSidebar() {
       const { data, error } = await sb.from("documents")
-        .select("id, title, file_size, created_at, download_allowed")
-        .eq("owner_id", session.user.id)
+        .select("id, title, file_size, created_at, type, source_url")
         .order("created_at", { ascending: false });
 
       if (error) { setAlert(gAlert(), `Could not load documents: ${error.message}`, "error"); return; }
@@ -319,9 +398,15 @@
       }
       list.innerHTML = docsCache.map(d => {
         const active = d.id === selectedDocId ? " active" : "";
-        return `<div class="sidebar-doc${active}" data-id="${d.id}" title="${escapeHtml(d.title)}">
-          <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="square"><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>
-          <span>${escapeHtml(d.title)}</span>
+        const isUrl = d.type === "url";
+        const typeClass = isUrl ? " sidebar-doc-url" : " sidebar-doc-pdf";
+        const icon = isUrl
+          ? `<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="square"><circle cx="12" cy="12" r="9"/><line x1="3" y1="12" x2="21" y2="12"/><path d="M12 3a14 14 0 000 18 14 14 0 000-18z"/></svg>`
+          : `<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="square"><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>`;
+        return `<div class="sidebar-doc${typeClass}${active}" data-id="${d.id}" title="${escapeHtml(d.title)}">
+          ${icon}
+          <span class="sidebar-doc-title">${escapeHtml(d.title)}</span>
+          <span class="sidebar-doc-tag">${isUrl ? "URL" : "PDF"}</span>
         </div>`;
       }).join("");
       list.querySelectorAll(".sidebar-doc").forEach(el =>
@@ -351,31 +436,51 @@
       hide($("#empty-state"));
       show($("#doc-detail"));
       clearAlert(dAlert());
+      exitRenameMode();
 
       const doc = docsCache.find(d => d.id === docId);
       if (!doc) return;
 
+      const isUrlDoc = doc.type === "url";
       $("#detail-title").textContent = doc.title;
-      $("#rename-input").value = doc.title;
       const sizeMb = doc.file_size ? (doc.file_size / 1024 / 1024).toFixed(2) + " MB" : "";
-      $("#detail-meta").textContent = [sizeMb, formatDate(doc.created_at)].filter(Boolean).join("  ·  ");
+      const metaParts = [
+        `<span class="type-tag${isUrlDoc ? " type-tag-url" : ""}">${isUrlDoc ? "URL" : "PDF"}</span>`,
+        isUrlDoc ? escapeHtml(doc.source_url || "") : sizeMb,
+        formatDate(doc.created_at),
+      ].filter(Boolean);
+      $("#detail-meta").innerHTML = metaParts.join(`<span class="meta-dot">·</span>`);
 
-      // Load sessions, link, recipients in parallel.
-      const [{ data: sessions }, { data: links }] = await Promise.all([
+      $("#btn-replace").title = isUrlDoc ? "Edit URL" : "Replace PDF";
+      $("#btn-replace").innerHTML = isUrlDoc
+        ? `<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="square"><path d="M12 20h9"/><path d="M16.5 3.5a2.12 2.12 0 013 3L7 19l-4 1 1-4L16.5 3.5z"/></svg>`
+        : `<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="square"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4M17 8l-5-5-5 5M12 3v12"/></svg>`;
+
+      // Load sessions and every link (any status) in parallel. Fetching all
+      // links — not just active ones — lets the sessions table label a
+      // session with the link that was used even after that link is revoked.
+      const [{ data: sessions }, { data: allLinks }] = await Promise.all([
         sb.from("view_sessions")
-          .select("id, viewer_email, ip_address, opened_at, total_seconds")
+          .select("id, share_link_id, viewer_email, ip_address, opened_at, total_seconds")
           .eq("document_id", docId)
           .order("opened_at", { ascending: false }),
         sb.from("share_links")
-          .select("id, token, require_verification, restrict_to_recipients, is_active, access_expires_at, created_at")
+          .select("id, name, token, require_verification, restrict_to_recipients, is_active, access_expires_at, download_allowed, watermark_layout, watermark_direction, watermark_repeat, cta_headline, cta_button_text, cta_button_url, created_at")
           .eq("document_id", docId)
-          .eq("is_active", true)
-          .order("created_at", { ascending: false })
-          .limit(1),
+          .order("created_at", { ascending: true }),
       ]);
 
       currentSessions = sessions || [];
-      currentLink = links?.[0] || null;
+
+      const allLinksList = allLinks || [];
+      linkLabelsById = {};
+      allLinksList.forEach((l, i) => { linkLabelsById[l.id] = l.name || `Link ${i + 1}`; });
+      linksCache = allLinksList.filter(l => l.is_active);
+
+      if (!selectedLinkId || !linksCache.find(l => l.id === selectedLinkId)) {
+        selectedLinkId = linksCache[0]?.id || null;
+      }
+      currentLink = linksCache.find(l => l.id === selectedLinkId) || null;
 
       const sessionIds = currentSessions.map(s => s.id);
       if (sessionIds.length) {
@@ -387,31 +492,31 @@
         currentPageViews = [];
       }
 
-      let recipients = [];
-      if (currentLink) {
-        const { data: recips } = await sb.from("link_recipients")
-          .select("id, link_id, email, added_at")
-          .eq("link_id", currentLink.id)
-          .order("added_at");
-        recipients = recips || [];
-      }
-
-      renderMetrics(currentSessions, currentLink);
+      renderMetrics(currentSessions, linksCache);
       populateViewerDropdowns(currentSessions);
       updateOpensChart();
       updatePagesChart();
-      renderSettings(doc, currentLink, recipients);
+      renderLinksList();
+
+      // If the drawer is open for a link that still exists, refresh its
+      // fields in place; otherwise close it (e.g. the link was revoked).
+      if (isDrawerOpen() && selectedLinkId) {
+        currentLink = linksCache.find(l => l.id === selectedLinkId) || null;
+        if (currentLink) await loadAndRenderLinkSettings(currentLink);
+        else closeLinkDrawer();
+      }
+
       renderSessions(currentSessions, currentPageViews);
     }
 
     /* ====================================================================
        Metrics
     ==================================================================== */
-    function renderMetrics(sessions, link) {
+    function renderMetrics(sessions, links) {
       $("#m-opens").textContent = sessions.length;
       $("#m-readers").textContent = new Set(sessions.map(s => s.viewer_email)).size;
       $("#m-time").textContent = formatDuration(sessions.reduce((a, s) => a + (s.total_seconds || 0), 0));
-      $("#m-links").textContent = link ? "1" : "0";
+      $("#m-links").textContent = links.length;
     }
 
     /* ====================================================================
@@ -460,12 +565,12 @@
           datasets: [{
             label: "Opens",
             data,
-            borderColor: "#1f4fd8",
-            backgroundColor: "rgba(31,79,216,0.07)",
+            borderColor: "#3454e8",
+            backgroundColor: "rgba(52,84,232,0.08)",
             fill: true,
-            tension: 0,
+            tension: 0.25,
             pointRadius: 3,
-            pointBackgroundColor: "#1f4fd8",
+            pointBackgroundColor: "#3454e8",
             borderWidth: 2,
           }],
         },
@@ -474,8 +579,8 @@
           maintainAspectRatio: false,
           plugins: { legend: { display: false }, tooltip: { mode: "index", intersect: false } },
           scales: {
-            x: { grid: { display: false }, ticks: { maxTicksLimit: 10, font: { family: "'IBM Plex Mono'", size: 9 }, color: "#4b4b57" } },
-            y: { beginAtZero: true, ticks: { stepSize: 1, font: { family: "'IBM Plex Mono'", size: 9 }, color: "#4b4b57" }, grid: { color: "#eeece8" } },
+            x: { grid: { display: false }, ticks: { maxTicksLimit: 10, font: { family: "'IBM Plex Mono'", size: 9 }, color: "#5b6170" } },
+            y: { beginAtZero: true, ticks: { stepSize: 1, font: { family: "'IBM Plex Mono'", size: 9 }, color: "#5b6170" }, grid: { color: "#edeef3" } },
           },
         },
       });
@@ -510,7 +615,7 @@
         type: "bar",
         data: {
           labels: pages.map(p => `Pg ${p}`),
-          datasets: [{ label: "Seconds", data: pages.map(p => totals[p]), backgroundColor: "#1f4fd8", borderWidth: 0, barThickness: Math.max(10, Math.min(28, Math.floor(160 / pages.length))) }],
+          datasets: [{ label: "Seconds", data: pages.map(p => totals[p]), backgroundColor: "#3454e8", borderWidth: 0, barThickness: Math.max(10, Math.min(28, Math.floor(160 / pages.length))) }],
         },
         options: {
           indexAxis: "y",
@@ -518,8 +623,8 @@
           maintainAspectRatio: false,
           plugins: { legend: { display: false }, tooltip: { callbacks: { label: ctx => ` ${formatDuration(ctx.raw)}` } } },
           scales: {
-            x: { beginAtZero: true, ticks: { font: { family: "'IBM Plex Mono'", size: 9 }, color: "#4b4b57", callback: v => formatDuration(v) }, grid: { color: "#eeece8" } },
-            y: { ticks: { font: { family: "'IBM Plex Mono'", size: 9 }, color: "#4b4b57" }, grid: { display: false } },
+            x: { beginAtZero: true, ticks: { font: { family: "'IBM Plex Mono'", size: 9 }, color: "#5b6170", callback: v => formatDuration(v) }, grid: { color: "#edeef3" } },
+            y: { ticks: { font: { family: "'IBM Plex Mono'", size: 9 }, color: "#5b6170" }, grid: { display: false } },
           },
         },
       });
@@ -548,34 +653,154 @@
     $("#pages-viewer-select").addEventListener("change", e => { pagesViewer = e.target.value; updatePagesChart(); });
 
     /* ====================================================================
-       Settings card rendering
-       Populates the static HTML elements with current link/doc state.
+       Links table — every active link for the selected document. Clicking
+       a row (or its settings icon) opens the right-side drawer to edit
+       that link; each link is independent.
     ==================================================================== */
-    function renderSettings(doc, link, recipients) {
-      // Link URL row
-      if (link) {
-        const url = buildShareUrl(link.token);
-        const urlEl = $("#link-url-text");
-        urlEl.textContent = url;
-        urlEl.style.fontStyle = "normal";
-        urlEl.style.color = "";
-        $("#btn-copy-link").style.display = "";
-        $("#btn-new-link").textContent = "Regenerate link";
-        $("#btn-revoke-link").style.display = "";
+    function linkStatsFor(linkId) {
+      const views = currentSessions.filter(s => s.share_link_id === linkId);
+      const last = views.reduce((latest, s) => (!latest || s.opened_at > latest ? s.opened_at : latest), null);
+      return { views: views.length, last };
+    }
+
+    function renderLinksList() {
+      const wrap = $("#links-list");
+      if (!linksCache.length) {
+        wrap.innerHTML = `<tr><td colspan="5"><div class="links-empty">No links yet — create one to start sharing this document.</div></td></tr>`;
+        return;
+      }
+      wrap.innerHTML = linksCache.map(l => {
+        const label = escapeHtml(linkLabelsById[l.id] || "Link");
+        const url = buildShareUrl(l.token);
+        const { views, last } = linkStatsFor(l.id);
+        const badges = [
+          l.restrict_to_recipients ? "Restricted" : null,
+          l.require_verification ? "OTP" : null,
+          l.access_expires_at ? "Expires" : null,
+          l.download_allowed === false ? "No download" : null,
+        ].filter(Boolean);
+        return `<tr class="link-row" data-id="${l.id}">
+          <td>
+            <div class="link-name-cell">
+              <span class="link-dot"></span>
+              <div>
+                <div class="link-row-name">${label}</div>
+                ${badges.length ? `<div class="link-badges">${badges.map(b => `<span class="link-badge">${b}</span>`).join("")}</div>` : ""}
+              </div>
+            </div>
+          </td>
+          <td><span class="link-row-url" title="${escapeHtml(url)}">${escapeHtml(url)}</span></td>
+          <td><span class="link-stat-value">${views}</span></td>
+          <td><span class="link-stat-sub">${last ? formatDate(last) : "—"}</span></td>
+          <td>
+            <div class="link-row-actions">
+              <button class="icon-btn btn-copy-row" data-token="${l.token}" title="Copy link">
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="square"><rect x="9" y="9" width="12" height="12"/><path d="M5 15H4a1 1 0 01-1-1V4a1 1 0 011-1h10a1 1 0 011 1v1"/></svg>
+              </button>
+              <button class="icon-btn btn-edit-row" data-id="${l.id}" title="Link settings">
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="square"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 00.33 1.82l.06.06a2 2 0 11-2.83 2.83l-.06-.06a1.65 1.65 0 00-1.82-.33 1.65 1.65 0 00-1 1.51V21a2 2 0 11-4 0v-.09a1.65 1.65 0 00-1-1.51 1.65 1.65 0 00-1.82.33l-.06.06a2 2 0 11-2.83-2.83l.06-.06a1.65 1.65 0 00.33-1.82 1.65 1.65 0 00-1.51-1H3a2 2 0 110-4h.09a1.65 1.65 0 001.51-1 1.65 1.65 0 00-.33-1.82l-.06-.06a2 2 0 112.83-2.83l.06.06a1.65 1.65 0 001.82.33h0A1.65 1.65 0 009.5 4.09V4a2 2 0 114 0v.09a1.65 1.65 0 001 1.51h0a1.65 1.65 0 001.82-.33l.06-.06a2 2 0 112.83 2.83l-.06.06a1.65 1.65 0 00-.33 1.82v0a1.65 1.65 0 001.51 1H21a2 2 0 110 4h-.09a1.65 1.65 0 00-1.51 1z"/></svg>
+              </button>
+              <button class="icon-btn icon-btn-danger btn-revoke-row" data-id="${l.id}" title="Revoke link">
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="square"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14a2 2 0 01-2 2H8a2 2 0 01-2-2L5 6"/></svg>
+              </button>
+            </div>
+          </td>
+        </tr>`;
+      }).join("");
+
+      wrap.querySelectorAll(".link-row").forEach(el => {
+        el.addEventListener("click", (e) => {
+          if (e.target.closest("button")) return;
+          openLinkDrawer(el.dataset.id);
+        });
+      });
+      wrap.querySelectorAll(".btn-edit-row").forEach(btn => {
+        btn.addEventListener("click", (e) => { e.stopPropagation(); openLinkDrawer(btn.dataset.id); });
+      });
+      wrap.querySelectorAll(".btn-copy-row").forEach(btn => {
+        btn.addEventListener("click", async (e) => {
+          e.stopPropagation();
+          const url = buildShareUrl(btn.dataset.token);
+          try { await navigator.clipboard.writeText(url); }
+          catch { prompt("Copy this link:", url); return; }
+          const original = btn.innerHTML;
+          btn.innerHTML = `<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="square"><polyline points="20 6 9 17 4 12"/></svg>`;
+          setTimeout(() => { btn.innerHTML = original; }, 1200);
+        });
+      });
+      wrap.querySelectorAll(".btn-revoke-row").forEach(btn => {
+        btn.addEventListener("click", async (e) => {
+          e.stopPropagation();
+          if (!confirm("Revoke this link? Viewers using it will lose access immediately.")) return;
+          const { error } = await sb.from("share_links").update({ is_active: false }).eq("id", btn.dataset.id);
+          if (error) { setAlert(dAlert(), `Could not revoke link: ${error.message}`, "error"); return; }
+          if (selectedLinkId === btn.dataset.id) { selectedLinkId = null; closeLinkDrawer(); }
+          await selectDoc(selectedDocId);
+        });
+      });
+    }
+
+    /* ====================================================================
+       Link settings drawer — slides in from the right to edit one link.
+    ==================================================================== */
+    function isDrawerOpen() { return $("#link-drawer").classList.contains("open"); }
+
+    async function openLinkDrawer(linkId) {
+      selectedLinkId = linkId;
+      currentLink = linksCache.find(l => l.id === linkId) || null;
+      if (!currentLink) return;
+
+      $("#link-drawer").classList.add("open");
+      $("#link-drawer-overlay").classList.add("open");
+      document.body.style.overflow = "hidden";
+
+      await loadAndRenderLinkSettings(currentLink);
+    }
+
+    async function loadAndRenderLinkSettings(link) {
+      $("#link-settings-heading").textContent = linkLabelsById[link.id] || "Edit link";
+      const { data: recips } = await sb.from("link_recipients")
+        .select("id, link_id, email, added_at")
+        .eq("link_id", link.id)
+        .order("added_at");
+      renderLinkSettings(link, recips || []);
+    }
+
+    function closeLinkDrawer() {
+      $("#link-drawer").classList.remove("open");
+      $("#link-drawer-overlay").classList.remove("open");
+      document.body.style.overflow = "";
+    }
+
+    $("#btn-drawer-close").addEventListener("click", closeLinkDrawer);
+    $("#link-drawer-overlay").addEventListener("click", closeLinkDrawer);
+    document.addEventListener("keydown", (e) => {
+      if (e.key === "Escape" && isDrawerOpen()) closeLinkDrawer();
+    });
+
+    function renderLinkSettings(link, recipients) {
+      $("#link-name-input").value = link.name || "";
+
+      const doc = docsCache.find(d => d.id === selectedDocId);
+      const isUrlDoc = doc?.type === "url";
+      if (isUrlDoc) {
+        hide($("#access-controls-section"));
+        hide($("#watermark-section"));
+        hide($("#recipients-section"));
+        show($("#url-doc-hint"));
       } else {
-        $("#link-url-text").textContent = "No link yet — generate one below.";
-        $("#link-url-text").style.fontStyle = "italic";
-        $("#link-url-text").style.color = "var(--ink-soft)";
-        $("#btn-copy-link").style.display = "none";
-        $("#btn-new-link").textContent = "Generate link";
-        $("#btn-revoke-link").style.display = "none";
+        show($("#access-controls-section"));
+        show($("#watermark-section"));
+        hide($("#url-doc-hint"));
       }
 
-      // Toggles
-      $("#toggle-restrict").checked = link?.restrict_to_recipients ?? false;
-      $("#toggle-verify").checked   = link?.require_verification  ?? false;
+      // Toggles (reflect saved state; edits are staged until "Save settings")
+      const restrictOn = link.restrict_to_recipients ?? false;
+      $("#toggle-restrict").checked = restrictOn;
+      $("#toggle-verify").checked   = link.require_verification  ?? false;
+      if (!isUrlDoc) toggleRecipientsVisibility(restrictOn);
 
-      const hasExpiry = !!(link?.access_expires_at);
+      const hasExpiry = !!link.access_expires_at;
       $("#toggle-expiry").checked = hasExpiry;
       const expiryInp = $("#expiry-input");
       if (hasExpiry) {
@@ -586,10 +811,39 @@
         expiryInp.value = "";
       }
 
-      $("#download-toggle").checked = doc.download_allowed !== false;
+      $("#download-toggle").checked = link.download_allowed !== false;
 
-      // Recipients list
+      $("#watermark-layout").value    = link.watermark_layout    || "single_line";
+      $("#watermark-direction").value = link.watermark_direction || "diagonal";
+      $("#watermark-repeat").value    = link.watermark_repeat    || "single";
+
+      $("#cta-headline").value    = link.cta_headline    || "";
+      $("#cta-button-text").value = link.cta_button_text || "";
+      $("#cta-button-url").value  = link.cta_button_url  || "";
+
       renderRecipientsList(recipients);
+      resetSettingsDraft();
+    }
+
+    /* ====================================================================
+       Settings draft state — changes are staged here until "Save settings"
+    ==================================================================== */
+    let pendingLinkFields = {};
+
+    function markSettingsDirty() {
+      $("#btn-save-settings").disabled = false;
+      show($("#settings-dirty-hint"));
+    }
+
+    function resetSettingsDraft() {
+      pendingLinkFields = {};
+      $("#btn-save-settings").disabled = true;
+      hide($("#settings-dirty-hint"));
+    }
+
+    function toggleRecipientsVisibility(shouldShow) {
+      const el = $("#recipients-section");
+      if (shouldShow) show(el); else hide(el);
     }
 
     function renderRecipientsList(recipients) {
@@ -618,72 +872,41 @@
       return `${(SECUREDOC_CONFIG.SITE_URL || window.location.origin).replace(/\/$/, "")}/view.html?token=${token}`;
     }
 
-    async function ensureLink() {
-      if (currentLink) return currentLink;
-      return await createNewLink(selectedDocId);
-    }
-
     async function createNewLink(docId) {
       if (!docId) return null;
       const token = crypto.randomUUID().replace(/-/g,"") + crypto.randomUUID().replace(/-/g,"");
       const { data, error } = await sb.from("share_links")
         .insert({ document_id: docId, token, require_verification: false, restrict_to_recipients: false, is_public: true })
-        .select("id, token, require_verification, restrict_to_recipients, is_active, access_expires_at, created_at")
+        .select("id, name, token, require_verification, restrict_to_recipients, is_active, access_expires_at, download_allowed, watermark_layout, watermark_direction, watermark_repeat, cta_headline, cta_button_text, cta_button_url, created_at")
         .single();
       if (error) { setAlert(dAlert(), `Could not create link: ${error.message}`, "error"); return null; }
-      currentLink = data;
       return data;
     }
 
     $("#btn-new-link").addEventListener("click", async () => {
       if (!selectedDocId) return;
-      if (currentLink) {
-        // Regenerate — revoke old, create new.
-        if (!confirm("Regenerate the link? The old link will stop working immediately.")) return;
-        await sb.from("share_links").update({ is_active: false }).eq("id", currentLink.id);
-        currentLink = null;
-      }
-      await createNewLink(selectedDocId);
+      const link = await createNewLink(selectedDocId);
+      if (!link) return;
+      selectedLinkId = link.id;
       await selectDoc(selectedDocId);
-    });
-
-    $("#btn-revoke-link").addEventListener("click", async () => {
-      if (!currentLink) return;
-      if (!confirm("Revoke this link? Viewers will lose access immediately.")) return;
-      await sb.from("share_links").update({ is_active: false }).eq("id", currentLink.id);
-      currentLink = null;
-      await selectDoc(selectedDocId);
-    });
-
-    $("#btn-copy-link").addEventListener("click", async () => {
-      if (!currentLink) return;
-      const url = buildShareUrl(currentLink.token);
-      try { await navigator.clipboard.writeText(url); }
-      catch { prompt("Copy this link:", url); return; }
-      const btn = $("#btn-copy-link");
-      btn.textContent = "Copied!";
-      setTimeout(() => { btn.textContent = "Copy"; }, 1600);
+      await openLinkDrawer(link.id);
     });
 
     /* ====================================================================
-       Toggle event handlers
+       Settings controls — stage changes in the draft, apply on Save
     ==================================================================== */
-    async function saveLinkField(field, value) {
-      const link = await ensureLink();
-      if (!link) return;
-      await sb.from("share_links").update({ [field]: value }).eq("id", link.id);
-      currentLink = { ...currentLink, [field]: value };
-    }
+    $("#toggle-restrict").addEventListener("change", e => {
+      pendingLinkFields.restrict_to_recipients = e.target.checked;
+      toggleRecipientsVisibility(e.target.checked);
+      markSettingsDirty();
+    });
 
-    $("#toggle-restrict").addEventListener("change", async e =>
-      saveLinkField("restrict_to_recipients", e.target.checked)
-    );
+    $("#toggle-verify").addEventListener("change", e => {
+      pendingLinkFields.require_verification = e.target.checked;
+      markSettingsDirty();
+    });
 
-    $("#toggle-verify").addEventListener("change", async e =>
-      saveLinkField("require_verification", e.target.checked)
-    );
-
-    $("#toggle-expiry").addEventListener("change", async e => {
+    $("#toggle-expiry").addEventListener("change", e => {
       const inp = $("#expiry-input");
       if (e.target.checked) {
         inp.style.display = "";
@@ -691,28 +914,97 @@
       } else {
         inp.style.display = "none";
         inp.value = "";
-        await saveLinkField("access_expires_at", null);
+        pendingLinkFields.access_expires_at = null;
+        markSettingsDirty();
       }
     });
 
-    $("#expiry-input").addEventListener("change", async e => {
+    $("#expiry-input").addEventListener("change", e => {
       if (!e.target.value) return;
-      await saveLinkField("access_expires_at", new Date(e.target.value).toISOString());
+      pendingLinkFields.access_expires_at = new Date(e.target.value).toISOString();
+      markSettingsDirty();
     });
 
-    $("#download-toggle").addEventListener("change", async e => {
-      if (!selectedDocId) return;
-      await sb.from("documents").update({ download_allowed: e.target.checked }).eq("id", selectedDocId);
-      docsCache = docsCache.map(d => d.id === selectedDocId ? { ...d, download_allowed: e.target.checked } : d);
+    $("#link-name-input").addEventListener("input", e => {
+      pendingLinkFields.name = e.target.value.trim() || null;
+      markSettingsDirty();
     });
+
+    $("#download-toggle").addEventListener("change", e => {
+      pendingLinkFields.download_allowed = e.target.checked;
+      markSettingsDirty();
+    });
+
+    $("#watermark-layout").addEventListener("change", e => {
+      pendingLinkFields.watermark_layout = e.target.value;
+      markSettingsDirty();
+    });
+    $("#watermark-direction").addEventListener("change", e => {
+      pendingLinkFields.watermark_direction = e.target.value;
+      markSettingsDirty();
+    });
+    $("#watermark-repeat").addEventListener("change", e => {
+      pendingLinkFields.watermark_repeat = e.target.value;
+      markSettingsDirty();
+    });
+
+    $("#cta-headline").addEventListener("input", e => {
+      pendingLinkFields.cta_headline = e.target.value.trim() || null;
+      markSettingsDirty();
+    });
+    $("#cta-button-text").addEventListener("input", e => {
+      pendingLinkFields.cta_button_text = e.target.value.trim() || null;
+      markSettingsDirty();
+    });
+    $("#cta-button-url").addEventListener("input", e => {
+      const val = e.target.value.trim();
+      // Normalize the stored value so bare domains ("example.com") still
+      // work as a real link when rendered on the viewer page.
+      const normalized = val && !/^[a-z][a-z0-9+.-]*:/i.test(val) ? `https://${val}` : val;
+      pendingLinkFields.cta_button_url = normalized || null;
+      markSettingsDirty();
+    });
+
+    $("#btn-save-settings").addEventListener("click", async () => {
+      if (!currentLink) return;
+      const btn = $("#btn-save-settings");
+      btn.disabled = true;
+      const originalLabel = btn.textContent;
+      btn.textContent = "Saving…";
+      clearAlert(dAlert());
+      try {
+        if (Object.keys(pendingLinkFields).length) {
+          const { error } = await sb.from("share_links").update(pendingLinkFields).eq("id", currentLink.id);
+          if (error) throw error;
+        }
+        await selectDoc(selectedDocId);
+        flashSaved();
+      } catch (err) {
+        setAlert(dAlert(), `Could not save settings: ${err.message || err}`, "error");
+        btn.disabled = false;
+      } finally {
+        btn.textContent = originalLabel;
+      }
+    });
+
+    function flashSaved() {
+      const hint = $("#settings-dirty-hint");
+      hint.textContent = "Saved";
+      hint.classList.add("settings-dirty-hint-success");
+      show(hint);
+      setTimeout(() => {
+        hint.classList.remove("settings-dirty-hint-success");
+        hint.textContent = "Unsaved changes";
+        hide(hint);
+      }, 1600);
+    }
 
     /* ====================================================================
-       Recipient management
+       Recipient management — always scoped to the currently selected link
     ==================================================================== */
     async function addRecipient(email) {
-      const link = await ensureLink();
-      if (!link) return;
-      const { error } = await sb.from("link_recipients").insert({ link_id: link.id, email: email.toLowerCase() });
+      if (!currentLink) return;
+      const { error } = await sb.from("link_recipients").insert({ link_id: currentLink.id, email: email.toLowerCase() });
       if (error) { setAlert(dAlert(), `Could not add recipient: ${error.message}`, "error"); return; }
       await selectDoc(selectedDocId);
     }
@@ -730,19 +1022,53 @@
     });
 
     /* ====================================================================
-       Rename
+       Rename — inline edit toggled via the pencil icon near the title
     ==================================================================== */
-    $("#btn-rename").addEventListener("click", async () => {
-      if (!selectedDocId) return;
-      const title = $("#rename-input").value.trim();
-      if (!title) return;
+    function enterRenameMode() {
+      const h1 = $("#detail-title");
+      const inp = $("#rename-input");
+      inp.value = h1.textContent;
+      hide(h1);
+      show(inp);
+      inp.focus();
+      inp.select();
+    }
+
+    function exitRenameMode() {
+      hide($("#rename-input"));
+      show($("#detail-title"));
+    }
+
+    let renameInFlight = false;
+    async function commitRename() {
+      const inp = $("#rename-input");
+      if (inp.classList.contains("hidden") || renameInFlight) return;
+      const title = inp.value.trim();
+      const doc = docsCache.find(d => d.id === selectedDocId);
+      if (!title || !selectedDocId || title === doc?.title) { exitRenameMode(); return; }
+      renameInFlight = true;
       const { error } = await sb.from("documents").update({ title }).eq("id", selectedDocId);
-      if (error) { setAlert(dAlert(), `Rename failed: ${error.message}`, "error"); return; }
+      renameInFlight = false;
+      if (error) { setAlert(dAlert(), `Rename failed: ${error.message}`, "error"); exitRenameMode(); return; }
       docsCache = docsCache.map(d => d.id === selectedDocId ? { ...d, title } : d);
       renderSidebarList();
       $("#detail-title").textContent = title;
-      setAlert(dAlert(), "Renamed.", "success");
+      exitRenameMode();
+      setAlert(dAlert(), "Document renamed.", "success");
+    }
+
+    $("#btn-rename-toggle").addEventListener("click", () => {
+      const inp = $("#rename-input");
+      if (inp.classList.contains("hidden")) enterRenameMode();
+      else commitRename();
     });
+
+    $("#rename-input").addEventListener("keydown", e => {
+      if (e.key === "Enter") { e.preventDefault(); commitRename(); }
+      if (e.key === "Escape") { e.preventDefault(); exitRenameMode(); }
+    });
+
+    $("#rename-input").addEventListener("blur", () => commitRename());
 
     /* ====================================================================
        Sessions table
@@ -752,7 +1078,7 @@
       pageViews.forEach(pv => (bySession[pv.session_id] ||= []).push(pv));
       const tbody = $("#sessions-tbody");
       if (!sessions.length) {
-        tbody.innerHTML = `<tr><td colspan="5" style="text-align:center;color:var(--ink-soft);padding:24px;">No sessions yet.</td></tr>`;
+        tbody.innerHTML = `<tr><td colspan="6" style="text-align:center;color:var(--ink-soft);padding:24px;">No sessions yet.</td></tr>`;
         return;
       }
       tbody.innerHTML = sessions.map(s => {
@@ -760,8 +1086,10 @@
           .sort((a, b) => a.page_number - b.page_number)
           .map(pv => `p${pv.page_number}: ${formatDuration(pv.seconds_spent)}`)
           .join(" · ");
+        const linkLabel = linkLabelsById[s.share_link_id] || "—";
         return `<tr>
           <td><strong>${escapeHtml(s.viewer_email)}</strong></td>
+          <td class="mono" style="font-size:0.78rem;">${escapeHtml(linkLabel)}</td>
           <td class="mono" style="white-space:nowrap;font-size:0.78rem;">${formatDate(s.opened_at)}</td>
           <td class="mono" style="font-size:0.78rem;">${escapeHtml(s.ip_address || "—")}</td>
           <td class="mono" style="font-size:0.78rem;">${formatDuration(s.total_seconds)}</td>
@@ -796,7 +1124,7 @@
 
       setAlert(gAlert(), replaceDocId ? "Replacing document…" : `Uploading "${file.name}"…`, "info");
 
-      const newPath = `${session.user.id}/${crypto.randomUUID()}.pdf`;
+      const newPath = `${crypto.randomUUID()}.pdf`;
       const { error: upErr } = await sb.storage.from("documents").upload(newPath, file, { contentType: "application/pdf" });
       if (upErr) { setAlert(gAlert(), `Upload failed: ${upErr.message}`, "error"); return; }
 
@@ -811,7 +1139,6 @@
       } else {
         const { data: newDoc, error: dbErr } = await sb.from("documents")
           .insert({
-            owner_id: session.user.id,
             title: file.name.replace(/\.pdf$/i, ""),
             storage_path: newPath,
             file_size: file.size,
@@ -838,12 +1165,79 @@
     /* ====================================================================
        Document actions (replace + delete)
     ==================================================================== */
-    $("#btn-replace").addEventListener("click", () => {
+    $("#btn-replace").addEventListener("click", async () => {
       if (!selectedDocId) return;
+      const doc = docsCache.find(d => d.id === selectedDocId);
+      if (doc?.type === "url") {
+        let newUrl = (prompt("Edit the URL for this item:", doc.source_url || "") || "").trim();
+        if (!newUrl) return;
+        if (!/^[a-z][a-z0-9+.-]*:/i.test(newUrl)) newUrl = `https://${newUrl}`;
+        const { error } = await sb.from("documents").update({ source_url: newUrl }).eq("id", selectedDocId);
+        if (error) { setAlert(dAlert(), `Could not update URL: ${error.message}`, "error"); return; }
+        setAlert(dAlert(), "URL updated.", "success");
+        await loadSidebar();
+        await selectDoc(selectedDocId);
+        return;
+      }
       const inp = $("#replace-input");
       inp.onchange = () => { if (inp.files.length) uploadFile(inp.files[0], selectedDocId); inp.value = ""; };
       inp.click();
     });
+
+    /* ====================================================================
+       Add a URL item (no file upload — just a target link + CTA settings)
+    ==================================================================== */
+    $("#btn-add-url-toggle").addEventListener("click", () => {
+      hide($("#btn-add-url-toggle"));
+      show($("#add-url-form"));
+      $("#add-url-input").focus();
+    });
+    $("#btn-add-url-cancel").addEventListener("click", () => {
+      $("#add-url-title").value = "";
+      $("#add-url-input").value = "";
+      hide($("#add-url-form"));
+      show($("#btn-add-url-toggle"));
+    });
+    $("#btn-add-url-submit").addEventListener("click", addUrlDocument);
+    $("#add-url-input").addEventListener("keydown", (e) => {
+      if (e.key === "Enter") { e.preventDefault(); addUrlDocument(); }
+    });
+
+    async function addUrlDocument() {
+      clearAlert(gAlert());
+      let url = $("#add-url-input").value.trim();
+      if (!url) return;
+      if (!/^[a-z][a-z0-9+.-]*:/i.test(url)) url = `https://${url}`;
+
+      let title = $("#add-url-title").value.trim();
+      if (!title) {
+        try { title = new URL(url).hostname.replace(/^www\./, ""); }
+        catch { title = "Untitled link"; }
+      }
+
+      setAlert(gAlert(), "Adding URL…", "info");
+      const { data: newDoc, error: dbErr } = await sb.from("documents")
+        .insert({ title, type: "url", source_url: url })
+        .select("id")
+        .single();
+      if (dbErr) { setAlert(gAlert(), `Could not add URL: ${dbErr.message}`, "error"); return; }
+
+      const token = crypto.randomUUID().replace(/-/g,"") + crypto.randomUUID().replace(/-/g,"");
+      await sb.from("share_links").insert({
+        document_id: newDoc.id,
+        token,
+        require_verification: false,
+        restrict_to_recipients: false,
+        is_public: true,
+      });
+
+      $("#add-url-title").value = "";
+      $("#add-url-input").value = "";
+      hide($("#add-url-form"));
+      show($("#btn-add-url-toggle"));
+      setAlert(gAlert(), "URL added. Click it in the sidebar to configure its call-to-action overlay.", "success");
+      await loadSidebar();
+    }
 
     $("#btn-delete").addEventListener("click", async () => {
       if (!selectedDocId) return;
@@ -852,17 +1246,13 @@
       if (doc?.storage_path) await sb.storage.from("documents").remove([doc.storage_path]);
       await sb.from("documents").delete().eq("id", selectedDocId);
       selectedDocId = null;
+      linksCache = [];
+      selectedLinkId = null;
       currentLink = null;
       hide($("#doc-detail"));
       show($("#empty-state"));
       await loadSidebar();
     });
-
-    /* ====================================================================
-       Helpers
-    ==================================================================== */
-    $("#signout-btn").addEventListener("click", signOut);
-    $("#signout-btn-2").addEventListener("click", signOut);
 
     init();
   </script>

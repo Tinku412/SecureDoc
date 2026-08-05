@@ -106,6 +106,16 @@
     </div>
   </main>
 
+  <!-- Call-to-action overlay — fixed to the bottom of the screen while the
+       document is open. Only shown when the link owner has configured a
+       button label and URL. -->
+  <div class="viewer-cta-bar hidden" id="cta-bar">
+    <div class="viewer-cta-inner">
+      <div class="viewer-cta-headline" id="cta-headline-text"></div>
+      <a class="btn btn-primary" id="cta-button" target="_blank" rel="noopener noreferrer"></a>
+    </div>
+  </div>
+
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/pdfjs-dist@3.11.174/build/pdf.min.js"></script>
   <script src="js/config.js"></script>
@@ -121,6 +131,7 @@
     let sessionId = "";
     let pdfBlob = null;
     let docTitle = "document";
+    let isUrlLink = false;
 
     if (!shareToken) {
       showDenied("This link is invalid or incomplete.");
@@ -164,8 +175,13 @@
         docTitle = body.title || "Document";
         linkRequiresVerification  = !!body.require_verification;
         linkRestrictsToRecipients = !!body.restrict_to_recipients;
+        isUrlLink = body.document_type === "url";
 
-        if (!linkRequiresVerification && !linkRestrictsToRecipients) {
+        if (isUrlLink) {
+          // URL items never gate — no name/email, no OTP. Sign in silently
+          // and go straight to the target URL with the CTA overlay.
+          await openUrlLink();
+        } else if (!linkRequiresVerification && !linkRestrictsToRecipients) {
           // Mode 1 — open: anyone enters a name/email and views immediately.
           openAsPublic();
         } else {
@@ -182,6 +198,78 @@
       } catch {
         showDenied("Could not reach the server. Please refresh and try again.");
       }
+    }
+
+    /* -----------------------------------------------------------------------
+       URL link path — no gate at all. Sign in anonymously in the background
+       (needed only so track-view has a session to authenticate with), then
+       load the target URL straight away with the CTA overlay on top.
+    ----------------------------------------------------------------------- */
+    async function openUrlLink() {
+      const { data: anonData, error: anonError } = await sb.auth.signInAnonymously();
+      if (anonError || !anonData.session) {
+        showDenied("Could not open this link. Please try again.");
+        return;
+      }
+      viewerJwt = anonData.session.access_token;
+      document.body.classList.add("url-view-mode");
+      $("#viewer").classList.add("viewer-fullbleed");
+      hide($("#gate-loading"));
+      show($("#viewer"));
+      await loadUrlDocument();
+    }
+
+    async function loadUrlDocument() {
+      try {
+        const res = await fetch(`${FUNCTIONS_URL}/serve-document`, {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            apikey: SECUREDOC_CONFIG.SUPABASE_ANON_KEY,
+            Authorization: `Bearer ${viewerJwt}`,
+          },
+          body: JSON.stringify({ token: shareToken }),
+        });
+        const body = await res.json().catch(() => ({}));
+
+        if (!res.ok || !body.url) {
+          showDenied(body.error || "This link could not be opened.");
+          return;
+        }
+
+        sessionId = body.session_id || "";
+
+        $("#doc-title").textContent = docTitle;
+        $("#viewer-meta").textContent = "Open link · view is recorded";
+        hide($("#download-btn"));
+
+        renderUrlEmbed(body.url);
+        showCtaOverlay({
+          headline: body.cta_headline,
+          buttonText: body.cta_button_text,
+          buttonUrl: body.cta_button_url,
+        }, false);
+        startTracking();
+      } catch {
+        showDenied("This link could not be opened. Please try again.");
+      }
+    }
+
+    function renderUrlEmbed(url) {
+      const container = $("#pdf-container");
+      container.innerHTML = "";
+      container.classList.add("url-embed-wrap");
+
+      const iframe = document.createElement("iframe");
+      iframe.className = "url-embed-frame";
+      iframe.src = url;
+      iframe.setAttribute("referrerpolicy", "no-referrer");
+      container.appendChild(iframe);
+
+      const fallback = document.createElement("p");
+      fallback.className = "url-embed-fallback";
+      fallback.innerHTML = `Trouble loading? <a href="${url}" target="_blank" rel="noopener noreferrer">Open directly ↗</a>`;
+      container.appendChild(fallback);
     }
 
     /* -----------------------------------------------------------------------
@@ -371,10 +459,31 @@
         if (downloadAllowed) show($("#download-btn"));
 
         await renderPdf(await pdfBlob.arrayBuffer());
+        const decode = (h) => decodeURIComponent(res.headers.get(h) || "");
+        showCtaOverlay({
+          headline: decode("x-cta-headline"),
+          buttonText: decode("x-cta-button-text"),
+          buttonUrl: decode("x-cta-button-url"),
+        });
         startTracking();
       } catch {
         showDenied("The document could not be loaded. Please try the link again.");
       }
+    }
+
+    /* -----------------------------------------------------------------------
+       Call-to-action overlay — fixed banner shown while the document is
+       open, configured per-link by the owner (headline + button label/URL).
+    ----------------------------------------------------------------------- */
+    function showCtaOverlay({ headline, buttonText, buttonUrl }, addPadding = true) {
+      if (!buttonText || !buttonUrl) return;
+
+      $("#cta-headline-text").textContent = headline || "";
+      const btn = $("#cta-button");
+      btn.textContent = buttonText;
+      btn.href = /^[a-z][a-z0-9+.-]*:/i.test(buttonUrl) ? buttonUrl : `https://${buttonUrl}`;
+      show($("#cta-bar"));
+      if (addPadding) $("#pdf-container").classList.add("cta-padding");
     }
 
     function showDenied(message, heading) {
@@ -470,7 +579,7 @@
         body: JSON.stringify({
           session_id: sessionId,
           total_seconds: totalSeconds,
-          pages: Object.entries(pageSeconds).map(([page, seconds]) => ({
+          pages: isUrlLink ? [] : Object.entries(pageSeconds).map(([page, seconds]) => ({
             page: Number(page),
             seconds,
           })),

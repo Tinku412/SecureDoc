@@ -38,7 +38,7 @@ Deno.serve(async (req) => {
     const { data: link } = await admin
       .from("share_links")
       .select(
-        "id, is_active, require_verification, restrict_to_recipients, access_expires_at, documents ( title )",
+        "id, is_active, require_verification, restrict_to_recipients, access_expires_at, documents ( title, type )",
       )
       .eq("token", token)
       .single();
@@ -54,8 +54,9 @@ Deno.serve(async (req) => {
       return jsonResponse({ allowed: false, reason: "link_expired" });
     }
 
-    const title =
-      (link.documents as { title: string } | null)?.title ?? "Document";
+    const doc = link.documents as { title: string; type: string } | null;
+    const title = doc?.title ?? "Document";
+    const documentType = doc?.type === "url" ? "url" : "pdf";
 
     // Probe mode — no email provided, just return link settings.
     if (!email) {
@@ -63,6 +64,7 @@ Deno.serve(async (req) => {
         require_verification: link.require_verification,
         restrict_to_recipients: link.restrict_to_recipients,
         title,
+        document_type: documentType,
         // Convenience: pre-allow if open access (no email check needed)
         allowed: !link.require_verification && !link.restrict_to_recipients,
       });
@@ -92,6 +94,7 @@ Deno.serve(async (req) => {
       allowed: true,
       require_verification: link.require_verification,
       title,
+      document_type: documentType,
     });
   } catch (_err) {
     return jsonResponse({ error: "Bad request" }, 400);
