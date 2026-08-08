@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Dashboard — SecureDoc</title>
+  <title>Dashboard — Dossier</title>
   <link rel="stylesheet" href="css/styles.css" />
 </head>
 <body class="dashboard-body">
@@ -14,7 +14,7 @@
         <span class="brand-mark">
           <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="square"><path d="M12 3l8 4v5c0 5-3.5 8-8 9-4.5-1-8-4-8-9V7l8-4z"/></svg>
         </span>
-        SecureDoc
+        DOSSIER
       </a>
     </div>
   </header>
@@ -28,7 +28,7 @@
           <span class="sidebar-brand-mark">
             <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2.5" stroke-linecap="square"><path d="M12 3l8 4v5c0 5-3.5 8-8 9-4.5-1-8-4-8-9V7l8-4z"/></svg>
           </span>
-          Documents
+          DOCUMENTS
         </div>
       </div>
 
@@ -565,12 +565,12 @@
           datasets: [{
             label: "Opens",
             data,
-            borderColor: "#3454e8",
-            backgroundColor: "rgba(52,84,232,0.08)",
+            borderColor: "#0a1424",
+            backgroundColor: "rgba(10,20,36,0.08)",
             fill: true,
             tension: 0.25,
             pointRadius: 3,
-            pointBackgroundColor: "#3454e8",
+            pointBackgroundColor: "#0a1424",
             borderWidth: 2,
           }],
         },
@@ -579,8 +579,8 @@
           maintainAspectRatio: false,
           plugins: { legend: { display: false }, tooltip: { mode: "index", intersect: false } },
           scales: {
-            x: { grid: { display: false }, ticks: { maxTicksLimit: 10, font: { family: "'IBM Plex Mono'", size: 9 }, color: "#5b6170" } },
-            y: { beginAtZero: true, ticks: { stepSize: 1, font: { family: "'IBM Plex Mono'", size: 9 }, color: "#5b6170" }, grid: { color: "#edeef3" } },
+            x: { grid: { display: false }, ticks: { maxTicksLimit: 10, font: { family: "'IBM Plex Mono'", size: 9 }, color: "#3a4558" } },
+            y: { beginAtZero: true, ticks: { stepSize: 1, font: { family: "'IBM Plex Mono'", size: 9 }, color: "#3a4558" }, grid: { color: "rgba(10,20,36,0.08)" } },
           },
         },
       });
@@ -615,7 +615,7 @@
         type: "bar",
         data: {
           labels: pages.map(p => `Pg ${p}`),
-          datasets: [{ label: "Seconds", data: pages.map(p => totals[p]), backgroundColor: "#3454e8", borderWidth: 0, barThickness: Math.max(10, Math.min(28, Math.floor(160 / pages.length))) }],
+          datasets: [{ label: "Seconds", data: pages.map(p => totals[p]), backgroundColor: "#0a1424", borderWidth: 0, barThickness: Math.max(10, Math.min(28, Math.floor(160 / pages.length))) }],
         },
         options: {
           indexAxis: "y",
@@ -623,8 +623,8 @@
           maintainAspectRatio: false,
           plugins: { legend: { display: false }, tooltip: { callbacks: { label: ctx => ` ${formatDuration(ctx.raw)}` } } },
           scales: {
-            x: { beginAtZero: true, ticks: { font: { family: "'IBM Plex Mono'", size: 9 }, color: "#5b6170", callback: v => formatDuration(v) }, grid: { color: "#edeef3" } },
-            y: { ticks: { font: { family: "'IBM Plex Mono'", size: 9 }, color: "#5b6170" }, grid: { display: false } },
+            x: { beginAtZero: true, ticks: { font: { family: "'IBM Plex Mono'", size: 9 }, color: "#3a4558", callback: v => formatDuration(v) }, grid: { color: "rgba(10,20,36,0.08)" } },
+            y: { ticks: { font: { family: "'IBM Plex Mono'", size: 9 }, color: "#3a4558" }, grid: { display: false } },
           },
         },
       });

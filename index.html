@@ -3,131 +3,275 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>SecureDoc — Share confidential documents with control</title>
-  <meta name="description" content="Upload a PDF, lock it to one email, and see exactly who read it — page by page. Every view is watermarked with the reader's email, IP and time." />
+  <title>Dossier — PDF Dynamic Watermarking & Link Tracking</title>
+  <meta name="description" content="Stop sending blind PDF links. Dynamic watermarks and link tracking for every PDF you share." />
   <link rel="stylesheet" href="css/styles.css" />
 </head>
-<body>
+<body class="landing-page">
 
-  <header class="site-header">
-    <div class="container nav">
-      <a class="brand" href="index.html">
-        <span class="brand-mark">
-          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="square"><path d="M12 3l8 4v5c0 5-3.5 8-8 9-4.5-1-8-4-8-9V7l8-4z"/></svg>
-        </span>
-        SecureDoc
+  <div class="grain" aria-hidden="true"></div>
+
+  <header class="lp-header">
+    <div class="lp-nav">
+      <a class="lp-brand" href="index.html">
+        <span class="lp-brand-mark" aria-hidden="true"></span>
+        DOSSIER
       </a>
-      <nav class="nav-links">
-        <a href="#features" class="nav-hide-mobile">Features</a>
-        <a href="#how" class="nav-hide-mobile">How it works</a>
-        <a class="btn btn-primary btn-sm" href="app.html">
-          <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="square"><path d="M5 12h14M13 5l7 7-7 7"/></svg>
-          Open app
-        </a>
+      <nav class="lp-nav-links">
+        <a href="#features">Features</a>
+        <a href="#product">Product</a>
+        <a href="#how">How it works</a>
+        <a href="#use-cases">Use cases</a>
       </nav>
+      <a class="lp-btn lp-btn-solid" href="app.html">Open app ↗</a>
     </div>
   </header>
 
-  <section class="hero">
-    <div class="container">
-      <h1>Share confidential PDFs.<br /><span class="accent-block">Know exactly who read them.</span></h1>
-      <p class="lede">
-        Upload a document, lock it to one email address, and send a link.
-        The reader verifies their email, and every page they see is watermarked
-        with their identity. You watch it all from your dashboard.
+  <section class="lp-hero">
+    <div class="lp-hero-copy">
+      <p class="lp-kicker">// DOCUMENT SHARING CONTROL</p>
+      <h1 class="lp-brand-hero">Dynamic Watermarking</h1>
+      <h2 class="lp-h1">&amp; Page-By-Page Viewer Analytics</h2>
+      <p class="lp-lede">
+        Add dynamic watermarks to every page; track viewer's activity page by page.
       </p>
-      <div class="hero-actions">
-        <a class="btn btn-primary" href="app.html">Start sharing securely</a>
-        <a class="btn" href="#how">See how it works</a>
+      <div class="lp-hero-actions">
+        <a class="lp-btn lp-btn-solid" href="app.html">Start sharing ↗</a>
+        <a class="lp-btn lp-btn-ghost" href="#features">See features</a>
+      </div>
+    </div>
+    <div class="lp-hero-visual">
+      <img src="assets/landing/hero-dither.png" alt="" class="lp-hero-img" />
+    </div>
+  </section>
+
+  <section class="lp-strip" id="problem">
+    <div class="lp-strip-label">01 — THE PROBLEM</div>
+    <div class="lp-box-grid lp-box-grid-3">
+      <div class="lp-box">
+        <h3 class="lp-box-title">Blind sharing</h3>
+        <p>You email a PDF and hope for the best. No proof of who opened it.</p>
+      </div>
+      <div class="lp-box">
+        <h3 class="lp-box-title">No deterrent</h3>
+        <p>If the file leaks, nothing ties it back to a viewer. Screenshots travel freely.</p>
+      </div>
+      <div class="lp-box">
+        <h3 class="lp-box-title">No signal</h3>
+        <p>You cannot see read time, return visits, or which pages mattered.</p>
+      </div>
+    </div>
+    <div class="lp-callout">
+      <p>Dossier replaces the attachment with a controlled link — watermarked, gated, and fully tracked.</p>
+    </div>
+  </section>
+
+  <section class="lp-section" id="features">
+    <div class="lp-section-head">
+      <p class="lp-kicker">02 — FEATURES</p>
+      <h2 class="lp-h2">Everything you need after you hit send.</h2>
+      <!-- <p class="lp-section-sub">Everything you need after you hit send — without the noise.</p> -->
+    </div>
+    <div class="lp-box-grid lp-box-grid-2">
+      <div class="lp-box lp-box-tall">
+        <p class="lp-box-tag">WATERMARK</p>
+        <h3 class="lp-box-title">Dynamic watermarks</h3>
+        <p>Every page is stamped with the viewer’s email, IP, and timestamp — on screen and in downloads.</p>
+        <ul class="lp-ticks">
+          <li>Diagonal, horizontal, or vertical</li>
+          <li>Single or tiled across the page</li>
+          <li>Applies to view and download</li>
+        </ul>
+      </div>
+      <div class="lp-box lp-box-tall">
+        <p class="lp-box-tag">ACCESS</p>
+        <h3 class="lp-box-title">Gates that work</h3>
+        <p>Decide who gets in before the PDF opens. Keep sensitive files off the open web.</p>
+        <ul class="lp-ticks">
+          <li>OTP email verification</li>
+          <li>Restrict to named recipients</li>
+          <li>Expiry dates and download lock</li>
+        </ul>
+      </div>
+      <div class="lp-box lp-box-tall">
+        <p class="lp-box-tag">TRACKING</p>
+        <h3 class="lp-box-title">Link-level analytics</h3>
+        <p>See opens, unique readers, total read time, and time per page — for every link you create.</p>
+        <ul class="lp-ticks">
+          <li>Multiple links per document</li>
+          <li>Viewer-level breakdowns</li>
+          <li>Session log with IP + timing</li>
+        </ul>
+      </div>
+      <div class="lp-box lp-box-tall">
+        <p class="lp-box-tag">CTA</p>
+        <h3 class="lp-box-title">In-document call to action</h3>
+        <p>Add a fixed banner under the PDF or URL view. Turn readers into next steps.</p>
+        <ul class="lp-ticks">
+          <li>Custom headline + button</li>
+          <li>Per-link configuration</li>
+          <li>Works on PDFs and URL items</li>
+        </ul>
       </div>
     </div>
   </section>
 
-  <section class="section" id="features">
-    <div class="container">
-      <h2 class="section-title">Built for documents that matter</h2>
-      <p class="section-sub">Everything you need to send a sensitive file without losing control of it.</p>
-      <div class="feature-grid">
-        <div class="feature-cell">
-          <span class="icon-box">
-            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="square"><rect x="4" y="10" width="16" height="11"/><path d="M8 10V7a4 4 0 018 0v3"/></svg>
-          </span>
-          <h3>Locked to one email</h3>
-          <p>Each link works for exactly one email address. Anyone else who opens it is refused — no exceptions.</p>
-        </div>
-        <div class="feature-cell">
-          <span class="icon-box">
-            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="square"><path d="M22 6l-10 7L2 6"/><rect x="2" y="4" width="20" height="16"/></svg>
-          </span>
-          <h3>Email verified by code</h3>
-          <p>Before the document opens, the reader proves who they are with a one-time code sent to their inbox.</p>
-        </div>
-        <div class="feature-cell">
-          <span class="icon-box">
-            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="square"><path d="M12 2v20M2 12h20M5 5l14 14M19 5L5 19"/></svg>
-          </span>
-          <h3>Dynamic watermarks</h3>
-          <p>Every page is stamped with the reader's email, IP address and timestamp — on screen and in downloads.</p>
-        </div>
-        <div class="feature-cell">
-          <span class="icon-box">
-            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="square"><path d="M3 21h18M6 21V10M12 21V4M18 21v-9"/></svg>
-          </span>
-          <h3>Page-by-page analytics</h3>
-          <p>See who opened your document, when, from where, and how long they spent on every single page.</p>
-        </div>
+  <section class="lp-section lp-section-bleed" id="product">
+    <div class="lp-section-head">
+      <p class="lp-kicker">03 — PRODUCT</p>
+      <h2 class="lp-h2">Your command center for shared PDFs</h2>
+      <p class="lp-section-sub">Upload once. Create links. Watch engagement in real time.</p>
+    </div>
+    <div class="lp-shot-frame">
+      <div class="lp-shot-bar">
+        <span>DASHBOARD · ANALYTICS</span>
+        <span>LIVE</span>
+      </div>
+      <img src="assets/landing/dashboard-analytics.png" alt="Dossier dashboard showing document analytics, share links, and viewer sessions" class="lp-shot" />
+    </div>
+    <div class="lp-box-grid lp-box-grid-2 lp-shot-pair">
+      <div class="lp-shot-frame">
+        <div class="lp-shot-bar"><span>VIEWER GATE</span><span>OTP / ACCESS</span></div>
+        <img src="assets/landing/viewer-access-gate.png" alt="Viewer access gate asking for email before opening a protected document" class="lp-shot" />
+      </div>
+      <div class="lp-shot-frame">
+        <div class="lp-shot-bar"><span>LINK SETTINGS</span><span>DRAWER</span></div>
+        <img src="assets/landing/link-settings-drawer.png" alt="Link settings drawer with access controls and watermark options" class="lp-shot" />
       </div>
     </div>
   </section>
 
-  <section class="section section-alt" id="how">
-    <div class="container">
-      <h2 class="section-title">How it works</h2>
-      <p class="section-sub">Four steps from upload to insight.</p>
-      <div class="steps">
-        <div class="step">
-          <span class="step-num">1</span>
-          <div>
-            <h3>Upload your PDF</h3>
-            <p>Open the app and drop your file. It is stored privately — nobody can reach it without a link from you.</p>
-          </div>
-        </div>
-        <div class="step">
-          <span class="step-num">2</span>
-          <div>
-            <h3>Lock it to an email</h3>
-            <p>Enter the recipient's email address. A unique link is generated that only works for that person.</p>
-          </div>
-        </div>
-        <div class="step">
-          <span class="step-num">3</span>
-          <div>
-            <h3>They verify, then read</h3>
-            <p>Your recipient enters their email and a one-time code. The document opens with their identity watermarked on every page.</p>
-          </div>
-        </div>
-        <div class="step">
-          <span class="step-num">4</span>
-          <div>
-            <h3>You see everything</h3>
-            <p>Your dashboard shows every open: who, when, from which IP, total reading time, and time spent per page.</p>
-          </div>
-        </div>
+  <section class="lp-section" id="how">
+    <div class="lp-section-head">
+      <p class="lp-kicker">04 — HOW IT WORKS</p>
+      <h2 class="lp-h2">Five steps. No training required.</h2>
+    </div>
+    <div class="lp-box-grid lp-box-grid-5">
+      <div class="lp-box lp-step">
+        <span class="lp-step-num">01</span>
+        <h3 class="lp-box-title">Upload</h3>
+        <p>Drop your PDF into Dossier.</p>
+      </div>
+      <div class="lp-box lp-step">
+        <span class="lp-step-num">02</span>
+        <h3 class="lp-box-title">Create links</h3>
+        <p>Spin up one or many share links.</p>
+      </div>
+      <div class="lp-box lp-step">
+        <span class="lp-step-num">03</span>
+        <h3 class="lp-box-title">Configure</h3>
+        <p>Set watermarks, OTP, expiry, download.</p>
+      </div>
+      <div class="lp-box lp-step">
+        <span class="lp-step-num">04</span>
+        <h3 class="lp-box-title">Share</h3>
+        <p>Send the link by email, Slack, or CRM.</p>
+      </div>
+      <div class="lp-box lp-step">
+        <span class="lp-step-num">05</span>
+        <h3 class="lp-box-title">Track</h3>
+        <p>Watch opens and page time land live.</p>
       </div>
     </div>
   </section>
 
-  <section class="cta-band">
-    <div class="container">
-      <h2>Your next confidential document deserves better than an email attachment.</h2>
-      <a class="btn btn-primary" href="app.html">Get started — it's free</a>
+  <section class="lp-section" id="analytics">
+    <div class="lp-section-head">
+      <p class="lp-kicker">05 — AFTER YOU SEND</p>
+      <h2 class="lp-h2">Know what happened</h2>
+      <p class="lp-section-sub">Not just a download count. The full reading story.</p>
+    </div>
+    <div class="lp-box-grid lp-box-grid-4">
+      <div class="lp-box lp-stat-box">
+        <span class="lp-stat">WHO</span>
+        <p>Which email opened the file — and when.</p>
+      </div>
+      <div class="lp-box lp-stat-box">
+        <span class="lp-stat">HOW OFTEN</span>
+        <p>Return visits and total opens per reader.</p>
+      </div>
+      <div class="lp-box lp-stat-box">
+        <span class="lp-stat">HOW LONG</span>
+        <p>Total time on the document and per page.</p>
+      </div>
+      <div class="lp-box lp-stat-box">
+        <span class="lp-stat">WHICH LINK</span>
+        <p>Campaign-ready tracking across multiple links.</p>
+      </div>
     </div>
   </section>
 
-  <footer class="site-footer">
-    <div class="container">
-      <span>SecureDoc — controlled document sharing.</span>
-      <span>Files encrypted at rest and in transit.</span>
+  <section class="lp-section" id="use-cases">
+    <div class="lp-section-head">
+      <p class="lp-kicker">06 — USE CASES</p>
+      <h2 class="lp-h2">Built for teams that share sensitive PDFs</h2>
+    </div>
+    <div class="lp-box-grid lp-box-grid-3">
+      <div class="lp-box">
+        <p class="lp-box-tag">SALES</p>
+        <h3 class="lp-box-title">Pitch decks &amp; data rooms</h3>
+        <p>Traceable watermarks and reader analytics on every investor or buyer touch.</p>
+      </div>
+      <div class="lp-box">
+        <p class="lp-box-tag">LEGAL</p>
+        <h3 class="lp-box-title">Contracts &amp; policies</h3>
+        <p>Named recipients, OTP gates, and audit-friendly session logs.</p>
+      </div>
+      <div class="lp-box">
+        <p class="lp-box-tag">HR / OPS</p>
+        <h3 class="lp-box-title">Handbooks &amp; comps</h3>
+        <p>Controlled access and download rules for internal sensitive docs.</p>
+      </div>
+    </div>
+  </section>
+
+  <section class="lp-cta">
+    <div class="lp-cta-inner">
+      <p class="lp-kicker lp-kicker-invert">// READY</p>
+      <h2 class="lp-h2 lp-h2-invert">Share your next PDF with control.</h2>
+      <p class="lp-cta-copy">Upload a file. Create a link. Start tracking with one click.</p>
+      <a class="lp-btn lp-btn-invert" href="app.html">Open Dossier ↗</a>
+    </div>
+  </section>
+
+  <footer class="lp-footer">
+    <div class="lp-footer-grid">
+      <div class="lp-footer-brand">
+        <a class="lp-brand" href="index.html">
+          <span class="lp-brand-mark" aria-hidden="true"></span>
+          DOSSIER
+        </a>
+        <p class="lp-footer-tag">PDF dynamic watermarking and link tracking for teams that cannot afford blind sharing.</p>
+      </div>
+      <div>
+        <h4 class="lp-footer-h">Product</h4>
+        <ul class="lp-footer-links">
+          <li><a href="#features">Features</a></li>
+          <li><a href="#product">Product</a></li>
+          <li><a href="#how">How it works</a></li>
+          <li><a href="app.html">Open app</a></li>
+        </ul>
+      </div>
+      <div>
+        <h4 class="lp-footer-h">Resources</h4>
+        <ul class="lp-footer-links">
+          <li><a href="#analytics">Analytics</a></li>
+          <li><a href="#problem">Why Dossier</a></li>
+          <li><a href="#use-cases">Use cases</a></li>
+        </ul>
+      </div>
+      <div>
+        <h4 class="lp-footer-h">Company</h4>
+        <ul class="lp-footer-links">
+          <li><a href="mailto:hello@dossier.app">Contact</a></li>
+          <li><a href="#">Privacy</a></li>
+          <li><a href="#">Terms</a></li>
+        </ul>
+      </div>
+    </div>
+    <div class="lp-footer-bottom">
+      <span>&copy; 2026 Dossier. All rights reserved.</span>
+      <span>Encrypted at rest and in transit.</span>
     </div>
   </footer>
 
